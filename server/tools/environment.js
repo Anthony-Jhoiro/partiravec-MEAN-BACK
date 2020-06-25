@@ -9,5 +9,6 @@ module.exports = {
   MONGODB_URI: process.env.MONGODB_URI,
   UPLOAD_FOLDER: process.env.PWD + '/upload/',
   ENDPOINT: process.env.ENDPOINT,
-  GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY
+  GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+  FRONT_URL: process.env.FRONT_URL
 }

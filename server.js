@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require("body-parser");
-const {PORT} = require('./server/tools/environment');
+const {PORT, FRONT_URL} = require('./server/tools/environment');
 const routes = require('./server/routes');
 const {db} = require ('./server/tools/databaseConnection');
 const socketManager = require('./server/socketManager');
@@ -9,14 +9,12 @@ const cors = require('cors');
 const app = express();
 app.use(bodyParser.json());
 
-// Link Angular App
-const distDir = __dirname + "/dist/";
-app.use(express.static(distDir));
-
 // Add routes
 routes(app);
 
-app.use(cors());
+app.use(cors({
+  origin: FRONT_URL
+}));
 
 
 
