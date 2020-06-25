@@ -1,0 +1,6 @@
+# dependencies
+/node_modules
+
+# server files
+.env
+upload/*
