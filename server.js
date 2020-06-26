@@ -13,7 +13,8 @@ app.use(bodyParser.json());
 routes(app);
 
 app.use(cors({
-  origin: FRONT_URL
+  origin: FRONT_URL,
+  optionsSuccessStatus: 200
 }));
 
 
