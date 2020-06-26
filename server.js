@@ -9,10 +9,11 @@ const cors = require('cors');
 const app = express();
 app.use(bodyParser.json());
 
+
+app.use(cors());
 // Add routes
 routes(app);
 
-app.use(cors());
 
 // Add headers
 // // app.use(function (req, res, next) {
