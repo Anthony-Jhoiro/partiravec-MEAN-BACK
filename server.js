@@ -15,6 +15,12 @@ app.use(cors({
   optionsSuccessStatus: 200,
   exposedHeaders: '_token'
 }));
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  return res.status(500).json({error: "Une erreur est survenue sur le serveur", stack: err.stack});
+})
+
 // Add routes
 routes(app);
 
