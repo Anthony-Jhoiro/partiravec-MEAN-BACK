@@ -12,7 +12,8 @@ app.use(bodyParser.json());
 
 app.use(cors({
   origin: FRONT_URL,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  exposedHeaders: '_token'
 }));
 // Add routes
 routes(app);
