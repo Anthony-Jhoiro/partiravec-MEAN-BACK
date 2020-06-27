@@ -4,3 +4,4 @@
 # server files
 .env
 upload/*.png
+uploads/*.png

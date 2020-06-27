@@ -10,5 +10,7 @@ module.exports = {
   UPLOAD_FOLDER: process.env.PWD + '/upload/',
   ENDPOINT: process.env.ENDPOINT,
   GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
-  FRONT_URL: process.env.FRONT_URL
+  FRONT_URL: process.env.FRONT_URL,
+  AMAZON_ACCESS_KEY: process.env.AMAZON_ACCESS_KEY,
+  AMAZON_SECRET_ACCESS_KEY: process.env.AMAZON_SECRET_ACCESS_KEY
 }

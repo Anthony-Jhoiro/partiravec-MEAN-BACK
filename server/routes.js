@@ -5,7 +5,7 @@ const imagesController = require('./controllers/ImagesController');
 const usersController = require('./controllers/UserController');
 const AuthenticationMiddleware = require("./middlewares/AuthenticationMiddleware");
 const ImageMiddleware = require("./middlewares/ImageMiddleware");
-const UploadMiddleware = require("./middlewares/UploadMiddleware");
+const {upload} = require("./middlewares/UploadMiddleware");
 const geocodingControlller = require("./controllers/GeocodingController");
 const friendsController = require('./controllers/FriendsController');
 
@@ -37,7 +37,7 @@ module.exports = app => {
 
   // Images
   //app.use('/api/images', AuthenticationMiddleware);
-  app.post('/api/images/upload', UploadMiddleware.single('file'), imagesController.uploadImage);
+  app.post('/api/images/upload', upload.single('file'), imagesController.uploadImage);
   app.get('/api/images/:image', ImageMiddleware, imagesController.getImage);
 
   // Users
