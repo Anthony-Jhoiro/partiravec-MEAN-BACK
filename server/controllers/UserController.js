@@ -10,7 +10,7 @@ class UserController {
       {
         username: {$regex: searchItem, $options: 'i'},
         _id: {$ne: authenticationController.currentUser}
-      }, {username: 1, _id: 1})).limit(5);
+      }, {username: 1, _id: 1}).limit(5));
   }
 }
 

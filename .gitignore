@@ -4,4 +4,7 @@
 # server files
 .env
 upload/*.png
-uploads/*.png
+uploads/*
+
+# IDE
+/.idea
