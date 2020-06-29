@@ -20,7 +20,7 @@ const {JWT_SECRET} = require("./environment.js");
  * @param data
  */
 const addJwtToken = (res, data) =>{
-  const token = jwt.sign(data, JWT_SECRET, {expiresIn: 3600});
+  const token = jwt.sign(data, JWT_SECRET, {expiresIn: '1d'});
   res.set('_token', token);
 } ;
 
