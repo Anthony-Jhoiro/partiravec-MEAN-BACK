@@ -16,7 +16,7 @@ const {JWT_SECRET} = require("./environment.js");
 
 module.exports = (token, successCallback, errorCallback) => {
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) errorCallback()
+    if (err) return errorCallback();
     successCallback(decoded);
   });
 }

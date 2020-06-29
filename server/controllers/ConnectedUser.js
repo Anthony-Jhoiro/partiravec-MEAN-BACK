@@ -39,7 +39,7 @@ class ConnectedUser {
           });
 
       },
-      () => this.socket.emit('error', 'La connexion a échoué'));
+      () => this.socket.emit('err', 'La connexion a échoué'));
   }
 
   onMessage(data, next) {
