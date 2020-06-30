@@ -12,8 +12,11 @@
  */
 
 const User = require('../../server/models/User');
+const request = require('supertest');
 
-module.exports = async () => {
-    const user = new User({username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"})
-    return await user.save();
+module.exports = async app => {
+    await request(app)
+        .post('/api/auth/register')
+        .send({username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"});
+    return {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
 }

@@ -97,6 +97,60 @@ describe("Test register", () => {
 });
 
 describe("Test the login route", () => {
-    test("User can connect to the ")
+    test("User can connect with username", async done => {
+        const user = await makeUser(app);
+        return request(app)
+            .post('/api/auth/login')
+            .send({login: user.username, password: user.password})
+            .expect(200)
+            .then(() => done());
+    });
+
+    test("User can connect with email", async done => {
+        const user = await makeUser(app);
+        return request(app)
+            .post('/api/auth/login')
+            .send({login: user.email, password: user.password})
+            .expect(200)
+            .then(() => done());
+    });
+
+    describe("User recieve bad request if parameters are missing",  () => {
+        test("Missing login", async done => {
+            const user = await makeUser(app);
+            return request(app)
+                .post('/api/auth/login')
+                .send({login: user.username})
+                .expect(400)
+                .then(() => done());
+        });
+
+        test("Missing password", async done => {
+            const user = await makeUser(app);
+            return request(app)
+                .post('/api/auth/login')
+                .send({password: user.password})
+                .expect(400)
+                .then(() => done());
+        });
+    });
+
+    test("Incorrect password", async done => {
+        const user = await makeUser(app);
+        return request(app)
+            .post('/api/auth/login')
+            .send({login: user.username, password: "hello"})
+            .expect(400)
+            .then(() => done());
+    });
+
+    test("Incorrect login", async done => {
+        const user = await makeUser(app);
+        return request(app)
+            .post('/api/auth/login')
+            .send({login: "wrong login", password: user.password})
+            .expect(400)
+            .then(() => done());
+    });
 });
 

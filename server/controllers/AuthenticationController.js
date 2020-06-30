@@ -38,7 +38,7 @@ class AuthenticationController {
   login(req, res) {
     const body = req.body;
     if (!(body.login && body.password)) {
-      return res.status(401).json("Requête incomplete");
+      return res.status(400).json("Requête incomplete");
     }
 
     const doLogin = optionalUser => {
