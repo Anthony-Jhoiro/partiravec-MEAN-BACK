@@ -10,22 +10,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-const {PORT} = require('./server/tools/environment');
-const {db} = require ('./server/tools/databaseConnection');
-const socketManager = require('./server/socketManager');
 
-const app = require('./app');
+const User = require('../../server/models/User');
 
-db.on('error', console.error.bind(console, 'connection error:'));
-
-db.once('open', () => {
-  const server = app.listen(PORT, () => {
-    const port = server.address().port;
-    console.log("App running on port", port);
-  });
-
-  // Add socket io && websocket
-  socketManager(server);
-});
-
-
+module.exports = async () => {
+    const user = new User({username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"})
+    return await user.save();
+}
