@@ -55,10 +55,10 @@ class MailController {
 
             from: GMAIL_EMAIL,
 
-            to: 'anthony.quere@lacatholille.fr',
+            to: destination,
             subject: 'Sending Email using Node.js',
             text:
-                'That was easy!'
+                url
         };
 
         transporter.sendMail(mailOptions,
