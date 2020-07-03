@@ -14,6 +14,7 @@
 const User = require('../models/User');
 const crypto = require('crypto');
 const jwtAdder = require("../tools/jwtAdder");
+const jwtVerify = require("../tools/jwtVerify");
 
 /**
  * Username Regex :
@@ -153,6 +154,38 @@ class AuthenticationController {
 
       });
 
+  }
+
+  checkPasswordReceiveLink(req, res) {
+      const token = req.params.token;
+
+      jwtVerify(token, () => {
+          return res.json({success: "Le lien est valide"});
+      }, () => {
+          return res.json({error: "Le lien est invalide"});
+      });
+  }
+
+  async renewPassword(req, res) {
+      const token = req.body.token;
+
+      jwtVerify(token, (decoded) => {
+
+          User.findOne({_id: decoded.id})
+              .then(user => {
+                  const hash = crypto.createHash('sha512', user.salt);
+                  hash.update(req.body.password);
+                  const hashedPassword = hash.digest('hex');
+                  user.password = hashedPassword;
+                  user.save((err) => {
+                      if (err) return res.status(500).json({error: "Votre mot de passe n'a pas pu être modifié"});
+                      return res.json({success: "Votre mot de passe a bien été mis à jour"});
+                  });
+              });
+
+      }, () => {
+          return res.json({error: "Le lien est invalide, le délai de 1h a été écoulé."});
+      });
   }
 }
 

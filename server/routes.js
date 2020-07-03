@@ -74,6 +74,9 @@ module.exports = app => {
   app.get('/api/group/:room', friendsController.getRoom);
 
   app.post('/api/password/forgot', mailController.passwordMail);
+  app.get('/api/password/checkLink/:token', authenticationController.checkPasswordReceiveLink);
+  app.post('/api/password/renew', authenticationController.renewPassword);
+
 
 
 }
