@@ -41,10 +41,7 @@ class MailController {
 
         const transporter =
             nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                protocol: 'ssl',
-                secure: true,
+                service: 'gmail',
                 auth: {
                     user: GMAIL_EMAIL,
                     pass: GMAIL_PASSWORD
@@ -54,12 +51,11 @@ class MailController {
 
         const mailOptions = {
 
-            from: GMAIL_EMAIL,
+            from: "<Partir Avec Vous> " + GMAIL_EMAIL,
 
             to: destination,
             subject: 'Sending Email using Node.js',
-            text:
-                url
+            text: url
         };
 
         transporter.sendMail(mailOptions,
