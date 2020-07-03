@@ -135,7 +135,7 @@ class PageController {
     // Check authorisation on the book
     const book = await Book.findOne({_id: req.params.book});
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-    if (!book.hasAccess(currentUser)) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+    if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
 
     const pages = await Page.find({book: book});
 
@@ -154,7 +154,7 @@ class PageController {
     // Check authorisation on the book
     const page = await Page.findOne({_id: req.params.page, book: req.params.book}).populate('book');
     if (!page) return res.status(404).json({error: "La page n'existe pas."});
-    if (!page.book.hasAccess(currentUser)) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+    if (!(page.book.hasAccess(currentUser)) && !page.book.public) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
 
     return res.json(page);
   }
@@ -164,7 +164,7 @@ class PageController {
     // Check authorisation on the book
     const book = await Book.findOne({_id: req.params.book});
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-    if (!book.hasAccess(currentUser)) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+    if (!(book.hasAccess(currentUser)) && !book.public) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
 
     const countries = await Page.find({book: book}).distinct("location.country");
 
@@ -176,7 +176,7 @@ class PageController {
     // Check authorisation on the book
     const book = await Book.findOne({_id: req.params.book});
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-    if (!book.hasAccess(currentUser)) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+    if (!(book.hasAccess(currentUser)) && !book.public) return req.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
 
     const pages = await Page.find({book: req.params.book, 'location.country': req.params.country});
 

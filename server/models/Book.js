@@ -24,6 +24,10 @@ const bookSchema = new db.Schema({
     type: db.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  public: {
+    type: Boolean,
+    default: false
+  },
   created: Date,
   updated: { type: Date, default: Date.now }
 });

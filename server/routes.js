@@ -21,6 +21,7 @@ const ImageMiddleware = require("./middlewares/ImageMiddleware");
 const {upload} = require("./middlewares/UploadMiddleware");
 const geocodingControlller = require("./controllers/GeocodingController");
 const friendsController = require('./controllers/FriendsController');
+const mailController = require('./controllers/MailController');
 
 
 module.exports = app => {
@@ -39,6 +40,7 @@ module.exports = app => {
   app.post('/api/book/access/add', bookController.addAccessBook);
   app.post('/api/book/access/remove', bookController.removeAccessBook);
   app.get('/api/book', bookController.getBooks);
+  app.get('/api/book/public', bookController.getPublicBooks);
   app.get('/api/book/:id', bookController.getBookById);
 
   // Pages
@@ -70,6 +72,8 @@ module.exports = app => {
   app.post('/api/group', friendsController.createRoom);
   app.get('/api/group', friendsController.getRooms);
   app.get('/api/group/:room', friendsController.getRoom);
+
+  app.get('/api/mail', mailController.testMail);
 
 
 }

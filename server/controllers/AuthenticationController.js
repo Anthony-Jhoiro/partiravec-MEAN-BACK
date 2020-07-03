@@ -49,7 +49,16 @@ class AuthenticationController {
 
       jwtAdder(res, {id: optionalUser._id});
 
-      return res.json({success: "Vous êtes connecté !"});
+      return res.json({
+          success: "Vous êtes connecté !",
+          data: {
+              user: {
+                  username: optionalUser.username,
+                  email: optionalUser.email,
+                  _id: optionalUser._id,
+              }
+          }
+      });
     }
 
     if (body.login.indexOf('@') !== -1) {
@@ -73,7 +82,7 @@ class AuthenticationController {
   }
 
   /**
-   * Re gister a user
+   * Register a user
    * @param req
    * @param res
    * @return {*|Promise<any>}
@@ -95,12 +104,12 @@ class AuthenticationController {
     // Check email unique
     User.findOne({username: body.username})
       .then(optionalUser => {
-        if (optionalUser) return res.status(400).json({error: "L'adresse email est déjà utilisée"});
+        if (optionalUser) return res.status(400).json({error: "Le nom d'utilisateur est déjà utilisé"});
 
         // check username unique
         User.findOne({email: body.email})
           .then(optionalUser => {
-            if (optionalUser) return res.status(400).json({error: "Le nom d'utilisateur est déjà utilisé"});
+            if (optionalUser) return res.status(400).json({error: "L'adresse email est déjà utilisée"});
 
             // set salt and hash password
             const salt = crypto
@@ -128,7 +137,16 @@ class AuthenticationController {
               }
 
               jwtAdder(res, {id: user._id});
-              return res.json({success: "Votre compte a bien été créé !"});
+              return res.json({
+                  success: "Votre compte a bien été créé !",
+                  data: {
+                      user: {
+                          username: user.username,
+                          email: user.email,
+                          _id: user._id
+                      }
+                  }
+              });
             })
 
           });
