@@ -73,7 +73,7 @@ module.exports = app => {
   app.get('/api/group', friendsController.getRooms);
   app.get('/api/group/:room', friendsController.getRoom);
 
-  app.get('/api/mail', mailController.testMail);
+  app.post('/api/password/forgot', mailController.passwordMail);
 
 
 }

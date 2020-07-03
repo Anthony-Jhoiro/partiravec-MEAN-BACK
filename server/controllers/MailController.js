@@ -12,26 +12,43 @@
  */
 
 const nodemailer = require('nodemailer');
-const {GMAIL_EMAIL, GMAIL_PASSWORD} = require('../tools/environment');
+const {GMAIL_EMAIL, GMAIL_PASSWORD, ENVIRONMENT, JWT_SECRET, FRONT_URL} = require('../tools/environment');
+const User = require("../models/User");
+const jwt = require('jsonwebtoken');
 
 class MailController {
-    testMail(req, res) {
+    async passwordMail(req, res) {
 
+        let user;
 
-        let transporter;
+        if (req.body.login.indexOf('@') !== -1) {
+            user = await User.findOne({email: req.body.login});
+        } else {
+            user = await User.findOne({username: req.body.login});
+        }
+        if (!user) return res.status(400).json({error: "L'adresse email ou l'identifiant n'existe pas"});
 
+        const code = jwt.sign({id: user.id}, JWT_SECRET, {expiresIn: '1h'});
 
-            transporter =
-                nodemailer.createTransport({
-                    host: 'smtp.gmail.com',
-                    port: 465,
-                    secure: true,
-                    auth: {
-                        user: GMAIL_EMAIL,
-                        pass: GMAIL_PASSWORD
-                    }
-                });
+        const url = FRONT_URL + '/home/password/receive?t=' + code;
+        const destination = user.email;
 
+        if (ENVIRONMENT === 'dev') {
+            console.log("Email send to : " + destination);
+            console.log("Email content : " + url);
+            return res.json({success: "Un message est apparu dans les logs"});
+        }
+
+        const transporter =
+            nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: GMAIL_EMAIL,
+                    pass: GMAIL_PASSWORD
+                }
+            });
 
 
         const mailOptions = {
