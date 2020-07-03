@@ -43,6 +43,7 @@ class MailController {
             nodemailer.createTransport({
                 host: 'smtp.gmail.com',
                 port: 465,
+                protocol: 'ssl',
                 secure: true,
                 auth: {
                     user: GMAIL_EMAIL,
