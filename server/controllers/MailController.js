@@ -39,6 +39,7 @@ class MailController {
             return res.json({success: "Un message est apparu dans les logs"});
         }
 
+        console.log(GMAIL_EMAIL,GMAIL_PASSWORD )
         const transporter =
             nodemailer.createTransport({
                 host: 'smtp.gmail.com',
