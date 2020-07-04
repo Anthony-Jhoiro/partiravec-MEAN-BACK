@@ -15,6 +15,7 @@ const db = require('../tools/databaseConnection');
 
 const groupSchema = new db.Schema({
   name: String,
+  type: String,
   contributors: [{
     type: db.Schema.Types.ObjectId,
     ref: 'User'
