@@ -11,30 +11,10 @@
  *
  */
 
-const User = require('../models/User');
-const authenticationController = require('../controllers/AuthenticationController');
+class NotificationController {
 
-class UserController {
-
-  async getUsersByName(req, res) {
-    const searchItem = req.query.searchItem;
-    const notFriend = req.query.notFriend;
-    let user;
-    let idQuery = [ { _id: {$ne: authenticationController.currentUser} } ]
-    if (notFriend) {
-        user = await User.find({_id: authenticationController.currentUser});
-        idQuery.push({ _id: { $nin: user.friends } });
-    }
-
-    return res.json(await User.find(
-      {
-        username: {$regex: searchItem, $options: 'i'},
-        $and: idQuery
-
-      }, {username: 1, _id: 1}).limit(5));
-  }
 }
 
-const userController = new UserController();
+const notificationController = new NotificationController();
 
-module.exports = userController;
+module.exports = notificationController;
