@@ -15,11 +15,10 @@ const authenticationController = require('./AuthenticationController');
 const User = require('../models/User');
 const Inbox = require('../models/Inbox');
 const Group = require('../models/Group');
-const ConnectedUser = require('./ConnectedUser')
+const notificationService = require('./NotificationController');
+const FriendRequest = require('../models/FriendRequest');
 
 class FriendsController {
-
-    clients = [];
 
     /**
      * Add a user to the current user friends if he isn't one already and if he is not the current user
@@ -201,20 +200,42 @@ class FriendsController {
         });
     }
 
-    onConnection(socket, data) {
-        const user = new ConnectedUser(socket);
-        this.clients.push(user);
-        // process.stdout.write('\x1Bc');
-        // process.stdout.write('Connected users : ' + this.clients.length);
+    async createFriendRequest(req, res) {
+        // Check request
+        if (!req.body.friend) return res.status(400);
 
-        return user;
-    }
+        const currentUserId = authenticationController.currentUser;
+        const newFriendId = req.body.friend;
 
+        // Check not friend
+        const currentUser = await User.findOne({ _id: currentUserId });
 
-    clientDisconnected(client) {
-        this.clients.splice(this.clients.indexOf(client), 1);
-        // process.stdout.write('\x1Bc');
-        // process.stdout.write('Connected users : ' + this.clients.length);
+        if (currentUser.friends.indexOf(newFriendId) !== -1)
+            return req.status(400).json({ error: "Vous êtes déjà amis." });
+
+        // Check for previous friends request
+        const previousRequest = await FriendRequest.findOne({ $or: [{ from: currentUserId, to: newFriendId }, { from: newFriendId, to: currentUserId }] });
+
+        if (previousRequest) return res.status(400).json({ error: "Une demande d'ami a déjà été envoyée" });
+
+        // Create the request
+        const request = new FriendRequest({
+            from: currentUserId,
+            to: newFriendId
+        });
+
+        request.save((err, request) => {
+            if (err) return res.status(500).json({ error: "Envoie de la requete impossible." });
+            const friendSocket = notificationService.getSocketFromUserId(newFriendId);
+            console.log(friendSocket);
+
+            if (friendSocket) {
+                friendSocket.socket.emit('friend-request', request);
+            }
+
+            return res.json({ success: "La demande d'ami a bien été envoyée !"})
+        })
+
     }
 
 }

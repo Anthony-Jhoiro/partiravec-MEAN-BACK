@@ -75,9 +75,11 @@ module.exports = app => {
   app.get('/api/group/:room', friendsController.getRoom);
 
   // Friends
-  app.get('/api/friends', friendsController.getFriends)
-  app.post('/api/friends', friendsController.addFriend)
-  app.delete('/api/friends', friendsController.removeFriend)
+  app.use('/api/friends', AuthenticationMiddleware);
+  app.get('/api/friends', friendsController.getFriends);
+  app.post('/api/friends', friendsController.addFriend);
+  app.delete('/api/friends/:friend', friendsController.removeFriend);
+  app.post('/api/friends/request', friendsController.createFriendRequest);
 
   app.post('/api/password/forgot', mailController.passwordMail);
   app.get('/api/password/checkLink/:token', authenticationController.checkPasswordReceiveLink);

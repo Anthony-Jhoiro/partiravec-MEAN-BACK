@@ -14,6 +14,7 @@
 const jwtVerify = require('../tools/jwtVerify');
 const Inbox = require('../models/Inbox');
 const Group = require('../models/Group');
+const notificationController = require ('../controllers/NotificationController')
 
 class ConnectedUser {
     userInfos;
@@ -73,6 +74,8 @@ class ConnectedUser {
                 })
             });
     }
+
+
 }
 
 module.exports = ConnectedUser;

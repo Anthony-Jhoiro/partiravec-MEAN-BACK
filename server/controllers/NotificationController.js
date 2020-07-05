@@ -11,8 +11,39 @@
  *
  */
 
-class NotificationController {
+const ConnectedUser = require('./ConnectedUser');
 
+class NotificationController {
+    clients = [];
+    onConnection(socket, data) {
+        const user = new ConnectedUser(socket);
+        this.clients.push(user);
+
+        console.log("[LOGIN]  : " + this.clients.length);
+
+        return user;
+    }
+
+
+    clientDisconnected(client) {
+        for (let index in this.clients) {
+            if (this.clients[index].userId === client.userId) {
+                this.clients.splice(index, 1);
+                break;
+            }
+        }
+        console.log("[LOGOUT] : " + this.clients.length);
+    }
+
+    getSocketFromUserId(userId) {
+        const user = this.clients.filter(c => {
+            return c.userInfos.userId === userId
+        });
+        if (user.length > 0) {
+            return user[0];
+        }
+        return null;
+    }
 }
 
 const notificationController = new NotificationController();

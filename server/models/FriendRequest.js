@@ -11,25 +11,19 @@
  *
  */
 
-const socketIo = require('socket.io');
-const notificationController = require('./controllers/NotificationController');
+const db = require('../tools/databaseConnection');
 
+const friendRequestSchema = new db.Schema({
+    from: {
+        type: db.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    to: {
+        type: db.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+});
 
-module.exports = server => {
-  // set-user-infos
-  const io = socketIo(server, {  });
-  io.on('connection', (socket) => {
+const FriendRequest = db.makeModel('FriendRequest', friendRequestSchema, 'friendRequests');
 
-    const user = notificationController.onConnection(socket, {});
-
-    socket.on('set-user-infos', (data, next) => {
-      console.log("identify :", data)
-      user.identify(data, next);
-    });
-
-    socket.on('disconnect', data => {
-      notificationController.clientDisconnected(user);
-    });
-
-  });
-}
+module.exports = FriendRequest;
