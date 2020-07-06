@@ -37,7 +37,6 @@ class NotificationController {
      * @return {null|ConnectedUser}
      */
     getSocketFromUserId(userId) {
-        console.log("Searching for : " + userId + " in ", this.clients);
         const user = this.clients.filter(c => {
             return c.userInfos.userId === userId
         });

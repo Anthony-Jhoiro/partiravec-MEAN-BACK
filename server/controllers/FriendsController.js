@@ -11,7 +11,6 @@
  *
  */
 
-const authenticationController = require('./AuthenticationController');
 const User = require('../models/User');
 const Inbox = require('../models/Inbox');
 const Group = require('../models/Group');
@@ -29,10 +28,10 @@ class FriendsController {
      */
     async addFriend(req, res) {
         // Get current user
-        const currentUser = await User.findOne({_id: authenticationController.currentUser});
+        const currentUser = await User.findOne({_id: req.currentUserId});
         const userToAdd = req.body.user
 
-        if (userToAdd === authenticationController.currentUser)
+        if (userToAdd === req.currentUserId)
             return res.status(400).json({error: "Vous ne pouvez pas vous ajouter comme ami."});
 
         if (currentUser.friends.indexOf(userToAdd) !== -1)
@@ -54,7 +53,7 @@ class FriendsController {
      */
     async removeFriend(req, res) {
         // Get current user
-        const currentUser = await User.findOne({_id: authenticationController.currentUser});
+        const currentUser = await User.findOne({_id: req.currentUserId});
         const userToAdd = req.body.user;
 
         const userIndex = currentUser.friends.indexOf(userToAdd)
@@ -69,12 +68,12 @@ class FriendsController {
     }
 
     async getFriends(req, res) {
-        const currentUser = await User.findOne({_id: authenticationController.currentUser}).populate('friends', 'username');
+        const currentUser = await User.findOne({_id: req.currentUserId}).populate('friends', 'username');
         return res.json(currentUser.friends);
     }
 
     async getRooms(req, res) {
-        const currentUser = authenticationController.currentUser;
+        const currentUser = req.currentUserId;
         return res.json(await Group.find({contributors: currentUser}));
     }
 
@@ -85,7 +84,7 @@ class FriendsController {
      * @return {Promise<*>}
      */
     async getRoom(req, res) {
-        const currentUser = authenticationController.currentUser;
+        const currentUser = req.currentUserId;
         const _group = await Group.findOne({
             _id: req.params.room,
             contributors: currentUser
@@ -122,7 +121,7 @@ class FriendsController {
         if (!req.query.friend) return req.status(400);
         const friendId = req.query.friend;
 
-        const currentUserId = authenticationController.currentUser;
+        const currentUserId = req.currentUserId;
         const friend = await User.find({_id: friendId});
 
         if (!friend) return req(404).json({error: "L'utilisateur n'existe pas"});
@@ -148,7 +147,7 @@ class FriendsController {
      */
     createRoom(req, res) {
         let userSet = new Set(req.body.users);
-        userSet.add(authenticationController.currentUser);
+        userSet.add(req.currentUserId);
         const users = Array.from(userSet);
         const group = new Group({
             name: req.body.name,
@@ -168,7 +167,7 @@ class FriendsController {
      * @return {Promise<*>}
      */
     async inviteToRoom(req, res) {
-        const currentUser = authenticationController.currentUser;
+        const currentUser = req.currentUserId;
         const room = await Group.findOne(req.body.room);
 
         if (!room.hasAccess(currentUser))
@@ -189,7 +188,7 @@ class FriendsController {
         // Check request
         if (!req.body.friend) return res.status(400);
 
-        const currentUserId = authenticationController.currentUser;
+        const currentUserId = req.currentUserId;
         const newFriendId = req.body.friend;
 
         // Check not friend
@@ -217,7 +216,6 @@ class FriendsController {
         request.save((err, request) => {
             if (err) return res.status(500).json({error: "Envoie de la requete impossible."});
             const friendSocket = notificationService.getSocketFromUserId(newFriendId);
-            console.log(friendSocket);
 
             if (friendSocket) {
                 friendSocket.socket.emit('friend-request', request.populate('from', 'username'));
@@ -229,7 +227,7 @@ class FriendsController {
     }
 
     async getFriendRequests(req, res) {
-        const currentUser = authenticationController.currentUser;
+        const currentUser = req.currentUserId;
 
         const friendRequests = await FriendRequest.find({to: currentUser}).populate('from', 'username');
 
@@ -243,7 +241,7 @@ class FriendsController {
      * @return {Promise<*>}
      */
     async acceptFriendRequest(req, res) {
-        const currentUserId = authenticationController.currentUser;
+        const currentUserId = req.currentUserId;
         const friendRequestId = req.body.friendRequest;
 
         if (!friendRequestId) return res.status(400);

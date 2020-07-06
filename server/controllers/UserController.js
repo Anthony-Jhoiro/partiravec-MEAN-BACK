@@ -12,7 +12,6 @@
  */
 
 const User = require('../models/User');
-const authenticationController = require('../controllers/AuthenticationController');
 
 class UserController {
 
@@ -20,9 +19,9 @@ class UserController {
     const searchItem = req.query.searchItem;
     const notFriend = req.query.notFriend;
     let user;
-    let idQuery = [ { _id: {$ne: authenticationController.currentUser} } ]
+    let idQuery = [ { _id: {$ne: req.currentUserId} } ]
     if (notFriend) {
-        user = await User.find({_id: authenticationController.currentUser});
+        user = await User.find({_id: req.currentUserId});
         idQuery.push({ _id: { $nin: user.friends } });
     }
 

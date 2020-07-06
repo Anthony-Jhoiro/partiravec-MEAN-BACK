@@ -14,7 +14,6 @@
 const jwt = require('jsonwebtoken');
 const {JWT_SECRET} = require("../tools/environment.js");
 const addJwtToken =  require("../tools/jwtAdder.js");
-const authenticationController = require('../controllers/AuthenticationController');
 
 /**
  * Middleware to control that the pangolin is connected
@@ -33,7 +32,7 @@ const AuthenticationMiddleware = (req, res, next) => {
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) return res.status(401).json({error: "Vous avez été déconnecté"});
 
-    authenticationController.currentUser = decoded.id;
+    req.currentUserId = decoded.id;
     addJwtToken(res, {id: decoded.id});
     next();
   });

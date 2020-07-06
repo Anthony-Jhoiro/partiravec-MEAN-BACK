@@ -14,8 +14,6 @@
 const Book = require("../models/Book");
 const User = require("../models/User");
 
-const authenticationController = require("./AuthenticationController");
-
 class BookController {
 
     /**
@@ -34,8 +32,8 @@ class BookController {
         const book = new Book({
             title: body.title,
             coverImage: body.coverImage,
-            contributors: [authenticationController.currentUser],
-            mainAuthor: authenticationController.currentUser,
+            contributors: [req.currentUserId],
+            mainAuthor: req.currentUserId,
             public: !!(body.public),
             created: Date.now(),
             updated: Date.now()
@@ -66,7 +64,7 @@ class BookController {
             .then(optionalBook => {
                 // Check if the user can update the book
                 if (!optionalBook) return res.status(400).json({error: "Le livre n'existe pas"});
-                if (optionalBook.contributors.indexOf(authenticationController.currentUser) === -1)
+                if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
                     return res.status(401).json({error: "Vous n'êtes pas autorisé à accéder à cette ressource."});
 
                 // Update infos
@@ -93,7 +91,7 @@ class BookController {
     async deleteBook(req, res) {
         const book = await Book.findOne({_id: req.params.id});
         if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
-        if (!book.isMainAuthor(authenticationController.currentUser))
+        if (!book.isMainAuthor(req.currentUserId))
             return res.status(401).json({error: "Vous n'avez pas l'autorisation pour modifier ce livre."});
         Book.deleteOne({_id: req.params.id}, err => {
             if (err) return res.status(500).json({error: "Echec pendant la modification du livre"});
@@ -115,7 +113,7 @@ class BookController {
         if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
 
         // Check that the current user has access
-        if (!book.hasAccess(authenticationController.currentUser))
+        if (!book.hasAccess(req.currentUserId))
             return res.status(401).json({error: "Vous n'avez pas l'autorisation pour modifier ce livre."});
 
         // check that the other user exists
@@ -146,7 +144,7 @@ class BookController {
         if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
 
         // Check that the current user has access
-        if (!book.hasAccess(authenticationController.currentUser))
+        if (!book.hasAccess(req.currentUserId))
             return res.status(401).json({error: "Vous n'avez pas l'autorisation pour modifier ce livre."});
 
         // check that the other user exists
@@ -178,8 +176,8 @@ class BookController {
     async getPublicBooks(req, res) {
         let books = await Book
             .find({
-                contributors: {$ne: authenticationController.currentUser},
-                mainAuthor: {$ne: authenticationController.currentUser},
+                contributors: {$ne: req.currentUserId},
+                mainAuthor: {$ne: req.currentUserId},
                 public: true
             })
             .sort({updated: -1})
@@ -208,7 +206,7 @@ class BookController {
      */
     async getBooks(req, res) {
         let books = await Book
-            .find({contributors: authenticationController.currentUser})
+            .find({contributors: req.currentUserId})
             .sort({updated: -1})
             .populate('mainAuthor', 'username');
 
@@ -238,7 +236,7 @@ class BookController {
         const optionalBook = await Book.findOne({_id: req.params.id});
         if (!optionalBook) return res.status(400).json({error: "Le livre n'a pas été trouvé."});
         if (!optionalBook.public) {
-            if (optionalBook.contributors.indexOf(authenticationController.currentUser) === -1)
+            if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
                 return res.status(401).json({error: "Vous n'êtes pas autorisé à accéder à cette ressource."});
         }
 
@@ -248,14 +246,14 @@ class BookController {
             coverImage: optionalBook.coverImage,
             created: optionalBook.created,
             updated: optionalBook.updated,
-            access: optionalBook.hasAccess(authenticationController.currentUser)
+            access: optionalBook.hasAccess(req.currentUserId)
         };
         //Add contributors
         book.contributors = await User
             .find({
                 $and: [
                     {_id: {$in: optionalBook.contributors}},
-                    {_id: {$ne: authenticationController.currentUser}}
+                    {_id: {$ne: req.currentUserId}}
                 ]
             }, {password: 0, salt: 0, updated: 0});
 

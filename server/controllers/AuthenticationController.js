@@ -25,7 +25,6 @@ const loginRegex = /^[a-z][a-z0-9_\-.]{4,}$/i;
 const saltLength = 255;
 
 class AuthenticationController {
-  currentUser;
 
 
   /**
@@ -175,8 +174,7 @@ class AuthenticationController {
               .then(user => {
                   const hash = crypto.createHash('sha512', user.salt);
                   hash.update(req.body.password);
-                  const hashedPassword = hash.digest('hex');
-                  user.password = hashedPassword;
+                  user.password = hash.digest('hex');
                   user.save((err) => {
                       if (err) return res.status(500).json({error: "Votre mot de passe n'a pas pu être modifié"});
                       return res.json({success: "Votre mot de passe a bien été mis à jour"});

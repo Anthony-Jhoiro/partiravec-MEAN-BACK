@@ -61,7 +61,6 @@ class MailController {
         transporter.sendMail(mailOptions,
             function (error) {
                 if (error) {
-                    console.log(error);
                     return res.status(500).json({error: "envoie du mail impossible"})
                 } else {
                     return res.json({success: "email envoyé"})

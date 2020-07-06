@@ -13,7 +13,6 @@
 
 const Book = require("../models/Book");
 const Page = require("../models/Page");
-const authenticationController = require("./AuthenticationController");
 
 class PageController {
   /**
@@ -27,7 +26,7 @@ class PageController {
    */
   async addPage(req, res) {
     const body = req.body;
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
 
     // Get the book
     const book = await Book.findOne({_id: req.params.book});
@@ -71,7 +70,7 @@ class PageController {
    */
   async updatePage(req, res) {
     const body = req.body;
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
 
     // the page exists and current user has access to it.
     const page = await Page.findOne({book: req.params.book, _id: req.params.page}).populate('book');
@@ -104,7 +103,7 @@ class PageController {
    * @requestParam page string
    */
   async deletePage(req, res) {
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
 
     // Get page
     const page = await Page.findOne({book: req.params.book, _id: req.params.page}).populate('book');
@@ -131,7 +130,7 @@ class PageController {
    * @requestParam book
    */
   async getPages(req, res) {
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
     // Check authorisation on the book
     const book = await Book.findOne({_id: req.params.book});
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
@@ -150,7 +149,7 @@ class PageController {
    * @requestParam book string
    */
   async getPageById(req, res) {
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
     // Check authorisation on the book
     const page = await Page.findOne({_id: req.params.page, book: req.params.book}).populate('book');
     if (!page) return res.status(404).json({error: "La page n'existe pas."});
@@ -160,7 +159,7 @@ class PageController {
   }
 
   async getCountriesWithLocations(req, res) {
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
     // Check authorisation on the book
     const book = await Book.findOne({_id: req.params.book});
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
@@ -172,7 +171,7 @@ class PageController {
   }
 
   async getPagesFromCountry(req, res) {
-    const currentUser = authenticationController.currentUser;
+    const currentUser = req.currentUserId;
     // Check authorisation on the book
     const book = await Book.findOne({_id: req.params.book});
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
