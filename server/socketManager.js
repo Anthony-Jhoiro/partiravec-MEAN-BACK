@@ -23,7 +23,6 @@ module.exports = server => {
     const user = notificationController.onConnection(socket, {});
 
     socket.on('set-user-infos', (data, next) => {
-      console.log("identify :", data)
       user.identify(data, next);
     });
 

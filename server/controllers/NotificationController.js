@@ -18,9 +18,6 @@ class NotificationController {
     onConnection(socket, data) {
         const user = new ConnectedUser(socket);
         this.clients.push(user);
-
-        console.log("[LOGIN]  : " + this.clients.length);
-
         return user;
     }
 
@@ -32,10 +29,15 @@ class NotificationController {
                 break;
             }
         }
-        console.log("[LOGOUT] : " + this.clients.length);
     }
 
+    /**
+     *
+     * @param userId
+     * @return {null|ConnectedUser}
+     */
     getSocketFromUserId(userId) {
+        console.log("Searching for : " + userId + " in ", this.clients);
         const user = this.clients.filter(c => {
             return c.userInfos.userId === userId
         });

@@ -80,6 +80,8 @@ module.exports = app => {
   app.post('/api/friends', friendsController.addFriend);
   app.delete('/api/friends/:friend', friendsController.removeFriend);
   app.post('/api/friends/request', friendsController.createFriendRequest);
+  app.get('/api/friends/request', friendsController.getFriendRequests);
+  app.post('/api/friends/request/accept', friendsController.acceptFriendRequest);
 
   app.post('/api/password/forgot', mailController.passwordMail);
   app.get('/api/password/checkLink/:token', authenticationController.checkPasswordReceiveLink);
