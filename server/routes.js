@@ -26,7 +26,14 @@ const mailController = require('./controllers/MailController');
 
 module.exports = app => {
   // test Route
-  app.get('/api', (req, res) => res.json({"Hello": "World !"}));
+  app.get('/api', (req, res) => {
+    const cookies = req.cookies;
+    console.log("Cookies : ", cookies);
+
+    res.cookie('myCookie', "Heyyyyyy", { maxAge: 3600000, httpOnly: true });
+
+    res.json({"Hello": "World !"});
+  });
 
   // Authentication
   app.post('/api/auth/login', authenticationController.login);
