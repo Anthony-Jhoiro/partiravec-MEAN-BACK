@@ -131,21 +131,7 @@ class FriendsController {
         const group = await Group.findOne({contributors: {$all: [friendId, currentUserId]}, type: 'FRIEND'});
 
         if (!group) {
-            // If the group doesn't exists, create it
-            let newGroup = new Group({
-                contributors: [friendId, currentUserId],
-                type: 'FRIEND'
-            });
-
-
-            newGroup.save(function (err, group) {
-                if (err) return res.status(500).json({error: "Impossible de créer le groupe de discussion"});
-
-                // this.clients.filter(client => client.userInfos.userId === friendId).forEach(u => u.socket.join(group._id));
-                // this.clients.filter(client => client.userInfos.userId === currentUserId).forEach(u => u.socket.join(group._id));
-
-                return res.json({success: "Votre groupe a été créé !", group: group});
-            }.bind(this));
+            return res.status(500).json({error: "Groupe de discussion introuvable"});
         } else {
             return res.json({group: group});
         }
@@ -280,8 +266,9 @@ class FriendsController {
 
                 // Create the room
                 const room = new Group({
-                    name: from.username + '-' + to.userName,
-                    contributors: [from, to]
+                    name: from.username + '-' + to.username,
+                    contributors: [from, to],
+                    type: 'FRIEND'
                 });
 
 

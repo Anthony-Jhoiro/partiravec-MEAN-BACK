@@ -69,7 +69,7 @@ class ConnectedUser {
 
                 message.save((err, message) => {
                     if (err) return this.socket.emit('error', "Impossible d'envoyer le message");
-                    this.socket.broadcast.to(data.room).emit('message', message);
+                    this.socket.broadcast.to(data.room).emit('message', {message, group});
                     next(message);
                 })
             });
