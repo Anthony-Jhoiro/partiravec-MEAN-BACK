@@ -13,42 +13,28 @@
 
 const db = require('../tools/databaseConnection');
 
-const bookSchema = new db.Schema({
-  title: String,
-  mainAuthor: {
-    type: db.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  coverImage: String,
-  contributors: [{
-    type: db.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  public: {
-    type: Boolean,
-    default: false
-  },
-  created: Date,
-  updated: { type: Date, default: Date.now }
+const travelSchema = new db.Schema({
+    book: {
+        type: db.Schema.ObjectId,
+        ref: 'Book'
+    },
+    steps: [{
+            from: {
+                type: db.Schema.ObjectId,
+                ref: 'Page'
+            },
+            to: {
+                type: db.Schema.ObjectId,
+                ref: 'Page'
+            },
+            type: {
+                type: String,
+                enum: ['PLANE', 'TRAIN', 'CAR']
+            }
+    }]
 });
 
-bookSchema.methods.isMainAuthor = function (id) {
-  return this.mainAuthor == id;
-};
 
-bookSchema.methods.hasAccess = function (id) {
-  return this.contributors.indexOf(id) !== -1;
-};
+const Travel = db.makeModel('Travel', travelSchema, 'travels');
 
-bookSchema.methods.canRead = function (id) {
-  return (this.hasAccess(id) || this.public);
-};
-
-
-bookSchema.methods.updateTimeStamp = function () {
-  this.updated = Date.now();
-}
-
-const Book = db.makeModel('Book', bookSchema, 'books');
-
-module.exports = Book;
+module.exports = Travel;

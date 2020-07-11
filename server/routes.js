@@ -22,6 +22,7 @@ const {upload} = require("./middlewares/UploadMiddleware");
 const geocodingControlller = require("./controllers/GeocodingController");
 const friendsController = require('./controllers/FriendsController');
 const mailController = require('./controllers/MailController');
+const travelController = require('./controllers/TravelController');
 
 
 module.exports = app => {
@@ -51,6 +52,11 @@ module.exports = app => {
     app.delete('/api/book/:book/page/:page', pageController.deletePage);
     app.get('/api/book/:book/page', pageController.getPages);
     app.get('/api/book/:book/page/:page', pageController.getPageById);
+
+    // Travels
+    app.get('/api/book/:book/travel', travelController.getTravelsFromBook);
+    app.post('/api/book/:book/travel', travelController.createTravel);
+    app.patch('/api/book/:book/travel', travelController.updateTravel);
 
     // Images
     //app.use('/api/images', AuthenticationMiddleware);

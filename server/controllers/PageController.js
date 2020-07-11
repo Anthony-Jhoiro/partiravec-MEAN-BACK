@@ -128,6 +128,7 @@ class PageController {
    * @param req
    * @param res
    * @requestParam book
+   * @queryParam min boolean get minified results
    */
   async getPages(req, res) {
     const currentUser = req.currentUserId;
@@ -136,9 +137,14 @@ class PageController {
     if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
     if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
 
-    const pages = await Page.find({book: book});
+    if (req.query.min) {
+      const pages = await Page.find({book: book}, {_id: 1, title: 1, location: 1});
+      return res.json(pages);
+    } else {
+      const pages = await Page.find({book: book});
+      return res.json(pages);
+    }
 
-    return res.json(pages);
   }
 
   /**
