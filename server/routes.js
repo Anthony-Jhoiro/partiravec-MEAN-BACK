@@ -23,6 +23,7 @@ const geocodingControlller = require("./controllers/GeocodingController");
 const friendsController = require('./controllers/FriendsController');
 const mailController = require('./controllers/MailController');
 const travelController = require('./controllers/TravelController');
+const adminController = require('./controllers/AdminController');
 
 
 module.exports = app => {
@@ -94,6 +95,8 @@ module.exports = app => {
     app.post('/api/password/forgot', mailController.passwordMail);
     app.get('/api/password/checkLink/:token', authenticationController.checkPasswordReceiveLink);
     app.post('/api/password/renew', authenticationController.renewPassword);
+
+    app.post('/api/admin/set/images', adminController.setImageOwning);
 
 
 }

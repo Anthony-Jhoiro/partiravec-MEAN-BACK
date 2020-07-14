@@ -11,24 +11,22 @@
  *
  */
 
-const jwt = require('jsonwebtoken');
-const {JWT_SECRET} = require("../tools/environment.js");
+const db = require('../tools/databaseConnection');
 
-const ImageMiddleware = (req, res, next) => {
-  // Get the token
-  const token = req.query._token;
 
-  if (!token) {
-    // return res.status(403).json({error: "Vous n'êtes pas connecté"});
-    req.currentUserId = null;
-  }
+const imageSchema = new db.Schema({
+    url: String,
+    book: {
+        type: db.Schema.Types.ObjectId,
+        ref: 'Book'
+    },
+    role: {
+        type: String,
+        enum: ['user', 'book']
+    }
+});
 
-  // Verify the token and add a new one
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({error: "Vous avez été déconnecté"});
-    req.currentUserId = decoded.id;
-    next();
-  })
-}
 
-module.exports = ImageMiddleware
+const Image = db.makeModel('Image', imageSchema, 'images');
+
+module.exports = Image;

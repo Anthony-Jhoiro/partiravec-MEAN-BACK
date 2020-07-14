@@ -15,6 +15,7 @@ const Resize = require("../tools/Resize");
 const { UPLOAD_FOLDER, ENDPOINT, IMAGE_STORAGE_MODE } = require("../tools/environment");
 const fs = require('fs');
 const { s3 } = require("../middlewares/UploadMiddleware");
+const Image = require("../models/Image");
 
 const LOCALSTORAGE = "local";
 
@@ -59,7 +60,7 @@ class ImagesController {
 
   }
 
-  getImage(req, res) {
+  async getImage(req, res) {
     const imageName = req.params.image;
 
     if (IMAGE_STORAGE_MODE === LOCALSTORAGE) {
