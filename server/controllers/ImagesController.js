@@ -16,6 +16,7 @@ const { UPLOAD_FOLDER, ENDPOINT, IMAGE_STORAGE_MODE } = require("../tools/enviro
 const fs = require('fs');
 const { s3 } = require("../middlewares/UploadMiddleware");
 const Image = require("../models/Image");
+const Book = require("../models/Book");
 
 const LOCALSTORAGE = "local";
 
@@ -50,18 +51,28 @@ class ImagesController {
           // fs.unlink(req.file.path);
           return res.json({ name: ENDPOINT + "/api/images/" + fileName });
         });
-
-
       });
     }
-
-
-
-
   }
 
   async getImage(req, res) {
     const imageName = req.params.image;
+    const currentUser = req.currentUserId;
+
+    // check if image is protected
+
+    const imageShield = await Image.findOne({url: imageName});
+    if (imageShield) {
+      console.log(`The image [${imageName}] is protected by ${imageShield.role}`);
+      // The image is protected
+      if (imageShield.role === 'book') {
+        // The image is own by a book, get the book
+        const book = await Book.findOne({ _id: imageShield.book });
+        if (!book.canRead(currentUser)) {
+          return res.status(401).json({error: "Vous n'avez pas accès à cette image"});
+        }
+      }
+    }
 
     if (IMAGE_STORAGE_MODE === LOCALSTORAGE) {
       return res.sendFile(UPLOAD_FOLDER + imageName);
@@ -79,7 +90,25 @@ class ImagesController {
       });
     }
   }
+
+  async createImageShield(url, role, id) {
+    // get previous shield if exits
+    const previousImageShield = await Image.findOne({url: url});
+    if (previousImageShield) return;
+
+
+    const imageShield = new Image({
+      url: url,
+      role: role
+    });
+    imageShield[role] = id;
+
+    imageShield.save(err => {
+      if (err) console.error("Impossible de créer le shield", err);
+    })
+  }
 }
+
 const imagesController = new ImagesController();
 
 module.exports = imagesController;

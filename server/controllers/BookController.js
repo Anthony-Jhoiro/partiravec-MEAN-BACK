@@ -13,6 +13,8 @@
 
 const Book = require("../models/Book");
 const User = require("../models/User");
+const imageController = require('./ImagesController');
+const {ENDPOINT} = require('../tools/environment');
 
 class BookController {
 
@@ -40,6 +42,10 @@ class BookController {
         });
         book.save((err, book) => {
             if (err) return res.status(500).json({error: "Une erreure est survenue pendant l'ajout d'un livre."});
+
+            // create a shield on imageCover
+            if (book.coverImage.includes(ENDPOINT))
+                imageController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
 
             return res.json({success: 'Le livre ' + book.title + ' a bien été créé !'});
         });
@@ -76,6 +82,11 @@ class BookController {
                 // Save it
                 optionalBook.save((err, book) => {
                     if (err) return res.status(500).json({error: "Une erreure est survenue pendant la modification du livre."});
+
+                    // create a shield on imageCover
+                    if (book.coverImage.includes(ENDPOINT))
+                        imageController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
+
                     return res.json({success: 'Le livre ' + book.title + ' a bien été modifié !'});
                 });
             });
@@ -195,6 +206,8 @@ class BookController {
                 access: false
             }
         });
+
+
         return res.json(booksToSend);
     }
 

@@ -15,7 +15,12 @@ const db = require('../tools/databaseConnection');
 
 
 const imageSchema = new db.Schema({
-    url: String,
+    url: {
+        type: String,
+        index: {
+            unique: true
+        }
+    },
     book: {
         type: db.Schema.Types.ObjectId,
         ref: 'Book'

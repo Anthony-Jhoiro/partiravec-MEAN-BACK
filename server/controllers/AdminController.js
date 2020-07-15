@@ -26,7 +26,7 @@ class AdminController {
         books.forEach(b => {
             if (!b.coverImage.includes(ENDPOINT)) return;
             const image = new Image({
-                url: b.coverImage,
+                url: b.coverImage.split('/').pop(),
                 book: b,
                 role: 'book'
             });
@@ -41,7 +41,7 @@ class AdminController {
                 if (!i.includes(ENDPOINT)) return;
 
                 const image = new Image({
-                    url: i,
+                    url: i.split('/').pop(),
                     book: p.book,
                     role: 'book'
                 })

@@ -13,6 +13,8 @@
 
 const Book = require("../models/Book");
 const Page = require("../models/Page");
+const {ENDPOINT} = require('../tools/environment');
+const imageController = require('./ImagesController');
 
 class PageController {
   /**
@@ -53,6 +55,12 @@ class PageController {
 
     newPage.save((err, page) => {
       if (err) return res.status(500).json({error: "Une erreur est survenue pendant l'ajout de la page."});
+
+      // create shields on images
+      page.images.forEach(i => {
+        if (i.includes(ENDPOINT))
+          imageController.createImageShield(i.split('/').pop(), 'book', page.book);
+      })
       return res.json({success: "La page " + page.title + " a bien été créée."});
     });
   }
