@@ -17,6 +17,7 @@ const Image = require('../models/Image');
 const {ENDPOINT} = require('../tools/environment');
 
 class AdminController {
+
     async setImageOwning(req, res) {
         const books = await Book.find();
         let images = [];
