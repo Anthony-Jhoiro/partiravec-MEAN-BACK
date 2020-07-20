@@ -11,19 +11,19 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const friendRequestSchema = new db.Schema({
+const friendRequestSchema = new mongoose.Schema({
     from: {
-        type: db.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
     to: {
-        type: db.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }
 });
 
-const FriendRequest = db.makeModel('FriendRequest', friendRequestSchema, 'friendRequests');
+const FriendRequest = mongoose.model('FriendRequest', friendRequestSchema, 'friendRequests');
 
 module.exports = FriendRequest;

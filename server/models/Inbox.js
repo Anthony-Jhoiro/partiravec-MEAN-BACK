@@ -11,15 +11,15 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const messageSchema = new db.Schema({
+const messageSchema = new mongoose.Schema({
   from: {
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Group'
   },
   to: {
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Group'
   },
   sent: {
@@ -30,6 +30,6 @@ const messageSchema = new db.Schema({
 });
 
 
-const Inbox = db.makeModel('Inbox', messageSchema, 'inbox');
+const Inbox = mongoose.model('Inbox', messageSchema, 'inbox');
 
 module.exports = Inbox;

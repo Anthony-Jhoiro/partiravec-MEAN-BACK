@@ -68,7 +68,10 @@ class FriendsController {
     }
 
     async getFriends(req, res) {
-        const currentUser = await User.findOne({_id: req.currentUserId}).populate('friends', 'username');
+        const currentUser = await User
+            .findOne({_id: req.currentUserId})
+            .populate({path: 'friends', select: 'username picture'})
+            .exec();
         return res.json(currentUser.friends);
     }
 
@@ -229,7 +232,10 @@ class FriendsController {
     async getFriendRequests(req, res) {
         const currentUser = req.currentUserId;
 
-        const friendRequests = await FriendRequest.find({to: currentUser}).populate('from', 'username');
+        const friendRequests = await FriendRequest
+            .find({to: currentUser})
+            .populate({path: 'from', select: 'username picture'})
+            .exec();
 
         return res.json(friendRequests);
     }

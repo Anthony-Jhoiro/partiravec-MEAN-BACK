@@ -63,7 +63,6 @@ class ImagesController {
 
     const imageShield = await Image.findOne({url: imageName});
     if (imageShield) {
-      console.log(`The image [${imageName}] is protected by ${imageShield.role}`);
       // The image is protected
       if (imageShield.role === 'book') {
         // The image is own by a book, get the book

@@ -11,20 +11,20 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const travelSchema = new db.Schema({
+const travelSchema = new mongoose.Schema({
     book: {
-        type: db.Schema.ObjectId,
+        type: mongoose.Schema.ObjectId,
         ref: 'Book'
     },
     steps: [{
             from: {
-                type: db.Schema.ObjectId,
+                type: mongoose.Schema.ObjectId,
                 ref: 'Page'
             },
             to: {
-                type: db.Schema.ObjectId,
+                type: mongoose.Schema.ObjectId,
                 ref: 'Page'
             },
             type: {
@@ -35,6 +35,6 @@ const travelSchema = new db.Schema({
 });
 
 
-const Travel = db.makeModel('Travel', travelSchema, 'travels');
+const Travel = mongoose.model('Travel', travelSchema, 'travels');
 
 module.exports = Travel;

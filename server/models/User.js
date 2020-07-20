@@ -11,17 +11,18 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const userSchema = new db.Schema({
+const userSchema = new mongoose.Schema({
   username: String,
   salt: String,
   password: String,
   email: String,
   profilePicture: String,
   created: Date,
+  picture: String,
   friends: [{
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: []
   }],
@@ -30,6 +31,6 @@ const userSchema = new db.Schema({
 
 
 
-const User = db.makeModel('User', userSchema, 'users');
+const User = mongoose.model('User', userSchema, 'users');
 
 module.exports = User;

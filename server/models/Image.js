@@ -11,10 +11,10 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
 
-const imageSchema = new db.Schema({
+const imageSchema = new mongoose.Schema({
     url: {
         type: String,
         index: {
@@ -22,7 +22,7 @@ const imageSchema = new db.Schema({
         }
     },
     book: {
-        type: db.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Book'
     },
     role: {
@@ -32,6 +32,6 @@ const imageSchema = new db.Schema({
 });
 
 
-const Image = db.makeModel('Image', imageSchema, 'images');
+const Image = mongoose.model('Image', imageSchema, 'images');
 
 module.exports = Image;

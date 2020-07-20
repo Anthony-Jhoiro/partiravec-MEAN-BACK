@@ -11,13 +11,13 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const groupSchema = new db.Schema({
+const groupSchema = new mongoose.Schema({
   name: String,
   type: String,
   contributors: [{
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }]
 });
@@ -27,6 +27,6 @@ groupSchema.methods.hasAccess = function (id) {
 }
 
 
-const Group = db.makeModel('Group', groupSchema, 'groups');
+const Group = mongoose.model('Group', groupSchema, 'groups');
 
 module.exports = Group;

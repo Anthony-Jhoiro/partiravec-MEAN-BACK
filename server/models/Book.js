@@ -11,17 +11,17 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const bookSchema = new db.Schema({
+const bookSchema = new mongoose.Schema({
   title: String,
   mainAuthor: {
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
   coverImage: String,
   contributors: [{
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
   public: {
@@ -49,6 +49,6 @@ bookSchema.methods.updateTimeStamp = function () {
   this.updated = Date.now();
 }
 
-const Book = db.makeModel('Book', bookSchema, 'books');
+const Book = mongoose.model('Book', bookSchema, 'books');
 
 module.exports = Book;

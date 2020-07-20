@@ -11,15 +11,15 @@
  *
  */
 
-const db = require('../tools/databaseConnection');
+const mongoose = require('mongoose');
 
-const pagesSchema = new db.Schema({
+const pagesSchema = new mongoose.Schema({
   mainAuthor: {
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
   lastAuthor: {
-    type: db.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
   title: String,
@@ -34,7 +34,7 @@ const pagesSchema = new db.Schema({
   },
   images: [String],
   book: {
-    type: db.Schema.ObjectId,
+    type: mongoose.Schema.ObjectId,
     ref: 'Book'
   },
   created: Date,
@@ -45,6 +45,6 @@ pagesSchema.methods.isMainAuthor = function(id) {
   return this.mainAuthor == id;
 };
 
-const Page = db.makeModel('Page', pagesSchema, 'pages');
+const Page = mongoose.model('Page', pagesSchema, 'pages');
 
 module.exports = Page;
