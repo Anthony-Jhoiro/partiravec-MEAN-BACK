@@ -11,19 +11,17 @@
  *
  */
 
-const User = require('../../server/models/User');
-const request = require('supertest');
+import {User} from '../../server/models/User';
+import * as request from 'supertest';
 
-module.exports = async app => {
+export const makeUser = async app => {
+
+    const user = {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
     await request(app)
         .post('/api/auth/register')
-        .send({username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"});
+        .send(user);
 
-    const user = new User({})
-    let newUser;
-    await user.save((err, user) => {
-        newUser = user;
-    });
+
     return user;
     // return {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
 }

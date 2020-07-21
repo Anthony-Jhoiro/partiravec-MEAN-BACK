@@ -12,8 +12,8 @@
  */
 
 import {verify} from 'jsonwebtoken';
-import {JWT_SECRET} from "../tools/environment.js";
-import {addJwtToken} from "../tools/jwtAdder.js";
+import {JWT_SECRET} from "../tools/environment";
+import {addJwtToken} from "../tools/jwtAdder";
 
 /**
  * Middleware to control that the pangolin is connected
