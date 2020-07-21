@@ -14,7 +14,7 @@
 import {Resize} from "../tools/Resize";
 import { UPLOAD_FOLDER, ENDPOINT, IMAGE_STORAGE_MODE } from "../tools/environment";
 import {readFile} from 'fs';
-import { s3 } from "../middlewares/UploadMiddleware";
+import UploadMiddleware  from "../middlewares/UploadMiddleware";
 import {Image} from "../models/Image";
 import {Book} from "../models/Book";
 import {Request, Response} from "express";
@@ -47,7 +47,7 @@ class ImagesController {
           Body: fileData
         };
 
-        s3.putObject(putParams, (err, data) => {
+        UploadMiddleware.s3.putObject(putParams, (err, data) => {
           if (err) return res.status(500).json({ error: err });
           return res.json({ name: ENDPOINT + "/api/images/" + fileName });
         });
@@ -81,7 +81,7 @@ class ImagesController {
         Key: imageName
       };
   
-      s3.getObject(getParams, (err, data) => {
+      UploadMiddleware.s3.getObject(getParams, (err, data) => {
         if (err) return res.status(404).json({ error: "Image introuvable" });
         res.writeHead(200, { 'Content-Type': 'image/jpeg' });
         res.write(data.Body, 'binary');

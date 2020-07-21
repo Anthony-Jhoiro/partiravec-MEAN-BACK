@@ -22,7 +22,7 @@ export const socketManager = (server: Server) => {
 
   io.on('connection', (socket: Socket) => {
 
-    const user = notificationController.onConnection(socket, {});
+    const user = notificationController.onConnection(socket);
 
     socket.on('set-user-infos', (data, next) => {
       user.identify(data, next);

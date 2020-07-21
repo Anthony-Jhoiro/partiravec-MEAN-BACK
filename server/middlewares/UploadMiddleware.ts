@@ -25,6 +25,8 @@ if (IMAGE_STORAGE_MODE === 'local') {
             fileSize: 4 * 1024 * 1024,
         }
     });
+
+    s3 = null;
 } else {
     const storage = multer.diskStorage({
         destination: 'uploads/',
@@ -50,6 +52,7 @@ if (IMAGE_STORAGE_MODE === 'local') {
     s3 = new S3();
 
 }
+
 
 export default {upload, s3};
 

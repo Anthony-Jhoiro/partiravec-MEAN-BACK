@@ -6,5 +6,9 @@
 upload/*.png
 uploads/*
 
+# compile files
+dist/*
+
 # IDE
 /.idea
+/dist/
