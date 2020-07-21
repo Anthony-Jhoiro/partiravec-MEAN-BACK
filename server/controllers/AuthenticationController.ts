@@ -46,7 +46,7 @@ class AuthenticationController {
             const hash = crypto.createHash('sha512', optionalUser.salt);
             hash.update(body.password);
             if (hash.digest('hex') !== optionalUser.password)
-                return res.status(400).json({error: "Mot de passe incorrect"});
+                return res.status(401).json({error: "Mot de passe incorrect"});
 
             addJwtToken(res, {id: optionalUser._id});
 

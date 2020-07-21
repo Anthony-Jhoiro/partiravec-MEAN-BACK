@@ -12,7 +12,7 @@
  */
 
 import {verify} from 'jsonwebtoken';
-import {JWT_SECRET} from "../tools/environment.js";
+import {JWT_SECRET} from "../tools/environment";
 
 export const ImageMiddleware = (req, res, next) => {
   // Get the token

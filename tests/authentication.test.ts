@@ -12,11 +12,11 @@
  */
 
 
-const request = require('supertest');
-const mongoose = require('mongoose');
-const app = require('../app');
-const User = require('../server/models/User');
-const makeUser = require('./utils/makeUser');
+import * as request from 'supertest';
+import * as mongoose from 'mongoose';
+import app from '../app';
+import {User} from '../server/models/User';
+import {makeUser} from './utils/makeUser';
 
 beforeAll(async () => {
     const url = `mongodb://127.0.0.1/partiravectest`
@@ -25,12 +25,12 @@ beforeAll(async () => {
 
 // Cleans up database between each test
 beforeEach(async () => {
-    await User.deleteMany();
+    await User.deleteMany({});
 })
 
 
 describe("Test the api path", () => {
-    test("It should response to he GET method", done => {
+    test("It should response to the GET method", done => {
         return request(app)
             .get("/api")
             .then(response => {
@@ -141,7 +141,7 @@ describe("Test the login route", () => {
         return request(app)
             .post('/api/auth/login')
             .send({login: user.username, password: "hello"})
-            .expect(400)
+            .expect(401)
             .then(() => done());
     });
 
