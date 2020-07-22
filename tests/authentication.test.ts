@@ -13,44 +13,11 @@
 
 
 import * as request from 'supertest';
-import * as mongoose from 'mongoose';
 import app from '../app';
 import {User} from '../server/models/User';
 import {makeUser} from './utils/makeUser';
 
-beforeEach(function (done) {
-        const url = `mongodb://127.0.0.1/partiravectest`;
 
-        function clearDB() {
-            for (let i in mongoose.connection.collections) {
-                mongoose.connection.collections[i].deleteMany({});
-            }
-            return done();
-        }
-
-
-        if (mongoose.connection.readyState === 0) {
-            mongoose.connect(url, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-                useFindAndModify: true,
-                useCreateIndex: true
-            })
-                .then(() => clearDB());
-        }
-        else return clearDB();
-    }
-);
-
-afterEach(function(done) {
-
-    return done();
-});
-
-afterAll(done => {
-    mongoose.disconnect();
-    return done();
-});
 
 
 describe("Test the api path", () => {
@@ -66,7 +33,7 @@ describe("Test the api path", () => {
 
 describe("Test register", () => {
     it("It should create an account, if all the parameters are valid", async done => {
-        const res = await request(app)
+        await request(app)
             .post('/api/auth/register')
             .send({username: "rdmName", password: "rdmPassword", email: "rdmEmail@mail.com"})
             .expect(200)
@@ -96,7 +63,6 @@ describe("Test register", () => {
     });
 
     describe("It should return a 400 status if the username or the email is already taken", () => {
-        const user = new User({username: "JohnnyBanana", email: "johnny.banana@mail.com"});
 
 
         it("Test username unique", async done => {
@@ -123,7 +89,7 @@ describe("Test register", () => {
 
 describe("Test the login route", () => {
     it("User can connect with username", async done => {
-        const user = await makeUser(app);
+        const user = await makeUser();
         return request(app)
             .post('/api/auth/login')
             .send({login: user.username, password: user.password})
@@ -132,7 +98,7 @@ describe("Test the login route", () => {
     });
 
     it("User can connect with email", async done => {
-        const user = await makeUser(app);
+        const user = await makeUser();
         return request(app)
             .post('/api/auth/login')
             .send({login: user.email, password: user.password})
@@ -142,7 +108,7 @@ describe("Test the login route", () => {
 
     describe("User recieve bad request if parameters are missing",  () => {
         it("Missing login", async done => {
-            const user = await makeUser(app);
+            const user = await makeUser();
             return request(app)
                 .post('/api/auth/login')
                 .send({login: user.username})
@@ -151,7 +117,7 @@ describe("Test the login route", () => {
         });
 
         it("Missing password", async done => {
-            const user = await makeUser(app);
+            const user = await makeUser();
             return request(app)
                 .post('/api/auth/login')
                 .send({password: user.password})
@@ -161,7 +127,7 @@ describe("Test the login route", () => {
     });
 
     it("Incorrect password", async done => {
-        const user = await makeUser(app);
+        const user = await makeUser();
         return request(app)
             .post('/api/auth/login')
             .send({login: user.username, password: "hello"})
@@ -170,7 +136,7 @@ describe("Test the login route", () => {
     });
 
     it("Incorrect login", async done => {
-        const user = await makeUser(app);
+        const user = await makeUser();
         return request(app)
             .post('/api/auth/login')
             .send({login: "wrong login", password: user.password})
