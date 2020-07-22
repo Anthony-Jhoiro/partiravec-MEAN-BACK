@@ -12,20 +12,8 @@
  */
 
 import * as request from 'supertest';
-import * as mongoose from 'mongoose';
 import app from '../app';
-import {User} from '../server/models/User';
 import {makeUser} from './utils/makeUser';
-
-// beforeAll(async () => {
-//     const url = `mongodb://127.0.0.1/partiravectest`
-//     await mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true})
-// });
-
-// // Cleans up database between each test
-// beforeEach(async () => {
-//     await User.deleteMany();
-// });
 
 
 describe("Test the book controller", () => {
@@ -36,26 +24,26 @@ describe("Test the book controller", () => {
         done();
     });
 
-    // user.then(user => {
-    //
-    //     describe("Test the book creation controller", () => {
-    //         test("A book should be created if the request is correct", done => {
-    //             return request(app)
-    //                 .post("/api/book", {title: "Jhonny Banana Stories", coverImage: "https://picsum.photos/200"})
-    //                 .then(response => {
-    //                     expect(response.statusCode).toBe(200);
-    //                     done();
-    //                 });
-    //         });
-    //         test("The user can not create book if he is not connected", done => {
-    //             return request(app)
-    //                 .post("/api/book", {title: "Jhonny Banana Stories", coverImage: "https://picsum.photos/200"})
-    //                 .then(response => {
-    //                     expect(response.statusCode).toBe(403);
-    //                     done();
-    //                 });
-    //         });
-    //     });
-    // });
+    describe("Test the book creation controller", () => {
+        test("A book should be created if the request is correct", async done => {
+            const user = await makeUser();
+            return request(app)
+                .post("/api/book")
+                .set('x-access-token', user.token) // User is connected
+                .send( {title: "Jhonny Banana Stories", coverImage: "https://picsum.photos/200"})
+                .then(response => {
+                    expect(response.statusCode).toBe(200);
+                    done();
+                });
+        });
+        test("The user can not create book if he is not connected", done => {
+            return request(app)
+                .post("/api/book", {title: "Jhonny Banana Stories", coverImage: "https://picsum.photos/200"})
+                .then(response => {
+                    expect(response.statusCode).toBe(403);
+                    done();
+                });
+        });
+    });
 
 });

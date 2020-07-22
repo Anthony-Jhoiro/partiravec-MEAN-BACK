@@ -12,16 +12,57 @@
  */
 
 import {User} from '../../server/models/User';
-import * as request from 'supertest';
+import * as crypto from "crypto";
+import {sign} from "jsonwebtoken";
+import {JWT_SECRET} from "../../server/tools/environment";
 
-export const makeUser = async app => {
+export const makeUser = async (user?: {username: string; password: string; email: string}) => {
+    // User infos
+    if (!user)
+        user = {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
 
-    const user = {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
-    await request(app)
-        .post('/api/auth/register')
-        .send(user);
+    // --- Create The User ---
 
 
-    return user;
-    // return {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
+    // Generate the salt as a 255 characters hexadecimal string
+    let salt =  crypto
+        .randomBytes(Math.ceil(255 / 2))
+        .toString('hex')
+        .slice(0, 255);
+
+    // Hash the password
+    // @ts-ignore
+    const hash = crypto.createHash('sha512', salt);
+    hash.update(user.password);
+    const hashedPassword = hash.digest('hex');
+
+    // Prepare the data to insert into the database
+    let dbUser = new User({
+        username: user.username,
+        email: user.email,
+        salt: salt,
+        password: hashedPassword,
+        created: Date.now()
+    })
+
+    // Save the user in database
+    try {
+        dbUser = await dbUser.save();
+    } catch (e) {
+        console.error("Error creating the user");
+    }
+
+    // --- Generate The Token ---
+    const token = sign({id: dbUser._id}, JWT_SECRET, {expiresIn: '365d'});
+
+    return {
+        _id: dbUser._id,
+        username: dbUser.username,
+        email: dbUser.email,
+        password: user.password,
+        hashedPassword: dbUser.password,
+        salt: dbUser.salt,
+        created: dbUser.created,
+        token: token
+    };
 }
