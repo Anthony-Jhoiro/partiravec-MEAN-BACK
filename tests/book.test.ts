@@ -17,6 +17,7 @@ import {makeUser} from './utils/makeUser';
 import {makeBook} from "./utils/makeBook";
 import {REQUEST_TOKEN_HEADER} from "../server/tools/constants";
 import {Book} from "../server/models/Book";
+import {Types} from "mongoose";
 
 
 describe("Test the book controller", () => {
@@ -33,7 +34,7 @@ describe("Test the book controller", () => {
             return request(app)
                 .post("/api/book")
                 .set(REQUEST_TOKEN_HEADER, user.token) // User is connected
-                .send( {title: "Jhonny Banana Stories", coverImage: "https://picsum.photos/200"})
+                .send({title: "Jhonny Banana Stories", coverImage: "https://picsum.photos/200"})
                 .then(response => {
                     expect(response.statusCode).toBe(200);
                     done();
@@ -53,7 +54,7 @@ describe("Test the book controller", () => {
         test("User can modify a book if he is connected and is the main author", async done => {
             const book = await makeBook();
             await request(app)
-                .patch("/api/book/"+book._id)
+                .patch("/api/book/" + book._id)
                 .set(REQUEST_TOKEN_HEADER, book.mainAuthor.token)
                 .send({title: book.title + '_updated', coverImage: book.coverImage + '_updated'})
                 .then(response => {
@@ -69,7 +70,7 @@ describe("Test the book controller", () => {
         test("User can not modify a book if he is not connected", async done => {
             const book = await makeBook();
             await request(app)
-                .patch("/api/book/"+book._id)
+                .patch("/api/book/" + book._id)
                 .send({title: book.title + '_updated', coverImage: book.coverImage + '_updated'})
                 .then(response => {
                     expect(response.statusCode).toBe(403);
@@ -78,11 +79,20 @@ describe("Test the book controller", () => {
         });
 
         test("User can modify a book if he is connected and is a contributor", async done => {
-            const user = await makeUser({username: "user_contributor", password: "password_contributor", email: "email@contributor.com" });
-            const book = await makeBook({title: "c_title", coverImage: "c_image", public: false, contributors: [user._id]});
+            const user = await makeUser({
+                username: "user_contributor",
+                password: "password_contributor",
+                email: "email@contributor.com"
+            });
+            const book = await makeBook({
+                title: "c_title",
+                coverImage: "c_image",
+                public: false,
+                contributors: [user._id]
+            });
 
             await request(app)
-                .patch("/api/book/"+book._id)
+                .patch("/api/book/" + book._id)
                 .set(REQUEST_TOKEN_HEADER, user.token)
                 .send({title: book.title + '_updated', coverImage: book.coverImage + '_updated'})
                 .then(response => {
@@ -96,11 +106,15 @@ describe("Test the book controller", () => {
         });
 
         test("User can not modify a book if he is connected but not a contributor", async done => {
-            const user = await makeUser({username: "user_not_contributor", password: "password_not_contributor", email: "email_not@contributor.com" });
+            const user = await makeUser({
+                username: "user_not_contributor",
+                password: "password_not_contributor",
+                email: "email_not@contributor.com"
+            });
             const book = await makeBook();
 
             await request(app)
-                .patch("/api/book/"+book._id)
+                .patch("/api/book/" + book._id)
                 .set(REQUEST_TOKEN_HEADER, user.token)
                 .send({title: book.title + '_updated', coverImage: book.coverImage + '_updated'})
                 .then(response => {
@@ -110,4 +124,104 @@ describe("Test the book controller", () => {
         });
     });
 
+    describe("Test the book contributors modification", () => {
+        describe("User can add contributors to a book", () => {
+            test("Test user can add a contributor to a book if he is already a contributor", async done => {
+                const newContributor = await makeUser();
+                const book = await makeBook();
+
+                const response = await request(app)
+                    .post("/api/book/access/add")
+                    .set(REQUEST_TOKEN_HEADER, book.mainAuthor.token)
+                    .send({book: book._id, user: newContributor._id});
+
+                expect(response.statusCode).toBe(200);
+
+                // get book
+                const b = await Book.findOne({_id: book._id})
+                expect(b.contributors)
+                    .toEqual(expect.arrayContaining([Types.ObjectId(newContributor._id)]));
+
+                done();
+            });
+
+            test("Test user can not add a contributor to a book if he is not already a contributor", async done => {
+                const newContributor = await makeUser();
+                const user = await makeUser();
+                const book = await makeBook();
+
+                const response = await request(app)
+                    .post("/api/book/access/add")
+                    .set(REQUEST_TOKEN_HEADER, user.token)
+                    .send({book: book._id, user: newContributor._id});
+
+                expect(response.statusCode).toBe(401);
+                done();
+            });
+
+            test("Test user can not add a contributor to a book if he is already a contributor", async done => {
+                const newContributor = await makeUser();
+                const book = await makeBook({
+                    title: 'title',
+                    coverImage: 'coverImage',
+                    contributors: [newContributor._id],
+                    public: false
+                });
+
+                const response = await request(app)
+                    .post("/api/book/access/add")
+                    .set(REQUEST_TOKEN_HEADER, book.mainAuthor.token)
+                    .send({book: book._id, user: newContributor._id});
+
+                expect(response.statusCode).toBe(400);
+                done();
+            });
+        });
+
+        describe("User can remove contributors from a book", () => {
+            test("Test user can remove a contributor from a book", async done => {
+                const user = await makeUser();
+                const oldContributor = await makeUser();
+                const book = await makeBook({
+                    title: 'title',
+                    coverImage: 'coverImage',
+                    contributors: [user._id, oldContributor._id],
+                    public: false
+                });
+
+                const response = await request(app)
+                    .post("/api/book/access/remove")
+                    .set(REQUEST_TOKEN_HEADER, user.token)
+                    .send({book: book._id, user: oldContributor._id});
+
+                expect(response.statusCode).toBe(200);
+
+                // get book
+                const b = await Book.findOne({_id: book._id})
+                expect(b.contributors)
+                    .toEqual(expect.not.arrayContaining([Types.ObjectId(oldContributor._id)]));
+
+                done();
+            });
+
+            test("Test user can not remove the main author from a book", async done => {
+                const user = await makeUser();
+                const book = await makeBook({
+                    title: 'title',
+                    coverImage: 'coverImage',
+                    contributors: [user._id],
+                    public: false
+                });
+
+                const response = await request(app)
+                    .post("/api/book/access/remove")
+                    .set(REQUEST_TOKEN_HEADER, user.token)
+                    .send({book: book._id, user: book.mainAuthor._id});
+
+                expect(response.statusCode).toBe(400);
+
+                done();
+            });
+        });
+    });
 });
