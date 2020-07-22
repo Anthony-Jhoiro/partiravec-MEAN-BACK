@@ -66,21 +66,19 @@ describe("Test register", () => {
 
 
         it("Test username unique", async done => {
-            const user = new User({username: "JohnnyBanana", email: "johnny.banana@mail.com"});
-            const a = await user.save();
+            const user = await makeUser();
             request(app)
                 .post('/api/auth/register')
-                .send({username: a.username, email: "rdmEmail@mail.com", password: "password"})
+                .send({username: user.username, email: "rdmEmail@mail.com", password: "password"})
                 .expect(400)
                 .then(() => done())
         });
 
         it("Test email unique", async done => {
-            const user = new User({username: "JohnnyBanana", email: "johnny.banana@mail.com"});
-            const a = await user.save();
+            const user = await makeUser();
             return request(app)
                 .post('/api/auth/register')
-                .send({username: "rdmName", email: a.email, password: "password"})
+                .send({username: "rdmName", email: user.email, password: "password"})
                 .expect(400)
                 .then(() => done())
         });

@@ -16,7 +16,18 @@ import * as crypto from "crypto";
 import {sign} from "jsonwebtoken";
 import {JWT_SECRET} from "../../server/tools/environment";
 
-export const makeUser = async (user?: {username: string; password: string; email: string}) => {
+export type UserMock = {
+    _id: string,
+    username: string,
+    email: string,
+    password: string,
+    hashedPassword: string,
+    salt: string,
+    created: Date,
+    token: string
+};
+
+export const makeUser = async (user?: {username: string; password: string; email: string}): Promise<UserMock> => {
     // User infos
     if (!user)
         user = {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
