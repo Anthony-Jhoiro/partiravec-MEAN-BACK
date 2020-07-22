@@ -31,7 +31,7 @@ import {makeUser} from './utils/makeUser';
 describe("Test the book controller", () => {
     // const user = makeUser(app);
 
-    test("You should implement this tests", done => {
+    it("You should implement this tests", done => {
         expect(44).toBe(44);
         done();
     });
