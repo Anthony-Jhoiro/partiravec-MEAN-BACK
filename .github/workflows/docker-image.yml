@@ -34,7 +34,11 @@ jobs:
     - run: npm install
     - run: npm run postinstall
     - run: npm test
-      
-      
+
+
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: anthony6jhoiro/partiravec-mean-back
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
