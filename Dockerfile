@@ -5,6 +5,6 @@ WORKDIR /app
 COPY . .
 
 # Create the Upload folder
-RUN mkdir upload
+RUN mkdir -p upload
 
 CMD ["npm", "start"]
