@@ -27,16 +27,24 @@ export type UserMock = {
     token: string
 };
 
-export const makeUser = async (user?: {username: string; password: string; email: string}): Promise<UserMock> => {
+let userIteration = 0;
+
+export const makeUser = async (user?: { username: string; password: string; email: string }): Promise<UserMock> => {
     // User infos
     if (!user)
-        user = {username: "JohnnyBanana", password: "azertyuiop22", email: "jhonny.banana@mail.com"};
+        user = {
+            username: "user_" + userIteration,
+            password: "password_" + userIteration,
+            email: "user_" + userIteration + "@mail.com"
+        };
+
+    userIteration++;
 
     // --- Create The User ---
 
 
     // Generate the salt as a 255 characters hexadecimal string
-    let salt =  crypto
+    let salt = crypto
         .randomBytes(Math.ceil(255 / 2))
         .toString('hex')
         .slice(0, 255);

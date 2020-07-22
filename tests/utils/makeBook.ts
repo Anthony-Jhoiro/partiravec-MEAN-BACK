@@ -21,18 +21,23 @@ export type BookMock = {
     mainAuthor: UserMock,
     contributors: Array<any>,
     public: boolean,
-    created: number|Date,
-    updated: number|Date
+    created: number | Date,
+    updated: number | Date
 }
+
+let bookIteration = 0;
+
 
 export const makeBook = async (book?: { title: string; coverImage: string; public: boolean, contributors: Array<any> }, user?: UserMock): Promise<BookMock> => {
     // Set the author
     if (!user) user = await makeUser();
 
+    bookIteration ++ ;
+
     // Set the book
     if (!book) book = {
-        title: "Jhonny Banana Stories",
-        coverImage: "https://picsum.photos/200",
+        title: "Book " + bookIteration,
+        coverImage: "image " + bookIteration,
         contributors: [],
         public: false
     };
