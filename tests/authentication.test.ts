@@ -18,30 +18,54 @@ import app from '../app';
 import {User} from '../server/models/User';
 import {makeUser} from './utils/makeUser';
 
-beforeAll(async () => {
-    const url = `mongodb://127.0.0.1/partiravectest`
-    await mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+beforeEach(function (done) {
+        const url = `mongodb://127.0.0.1/partiravectest`;
+
+        function clearDB() {
+            for (let i in mongoose.connection.collections) {
+                mongoose.connection.collections[i].deleteMany({});
+            }
+            return done();
+        }
+
+
+        if (mongoose.connection.readyState === 0) {
+            mongoose.connect(url, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+                useFindAndModify: true,
+                useCreateIndex: true
+            })
+                .then(() => clearDB());
+        }
+        else return clearDB();
+    }
+);
+
+afterEach(function(done) {
+
+    return done();
 });
 
-// Cleans up database between each test
-beforeEach(async () => {
-    await User.deleteMany({});
-})
+afterAll(done => {
+    mongoose.disconnect();
+    return done();
+});
 
 
 describe("Test the api path", () => {
-    test("It should response to the GET method", done => {
+    test("It should response to the GET method", () => {
         return request(app)
             .get("/api")
             .then(response => {
                 expect(response.statusCode).toBe(200);
-                done();
+                // done();
             });
     })
 });
 
 describe("Test register", () => {
-    test("It should create an account, if all the parameters are valid", async done => {
+    it("It should create an account, if all the parameters are valid", async done => {
         const res = await request(app)
             .post('/api/auth/register')
             .send({username: "rdmName", password: "rdmPassword", email: "rdmEmail@mail.com"})
@@ -55,7 +79,7 @@ describe("Test register", () => {
         done();
     });
 
-    test("It should sendBack a 400 error when a parameter is missed", async done => {
+    it("It should sendBack a 400 error when a parameter is missed", async done => {
         await request(app)
             .post('/api/auth/register')
             .send({username: "rdmName", email: "rdmEmail@mail.com"})
@@ -75,7 +99,7 @@ describe("Test register", () => {
         const user = new User({username: "JohnnyBanana", email: "johnny.banana@mail.com"});
 
 
-        test("Test username unique", async done => {
+        it("Test username unique", async done => {
             const user = new User({username: "JohnnyBanana", email: "johnny.banana@mail.com"});
             const a = await user.save();
             request(app)
@@ -85,7 +109,7 @@ describe("Test register", () => {
                 .then(() => done())
         });
 
-        test("Test email unique", async done => {
+        it("Test email unique", async done => {
             const user = new User({username: "JohnnyBanana", email: "johnny.banana@mail.com"});
             const a = await user.save();
             return request(app)
@@ -98,7 +122,7 @@ describe("Test register", () => {
 });
 
 describe("Test the login route", () => {
-    test("User can connect with username", async done => {
+    it("User can connect with username", async done => {
         const user = await makeUser(app);
         return request(app)
             .post('/api/auth/login')
@@ -107,7 +131,7 @@ describe("Test the login route", () => {
             .then(() => done());
     });
 
-    test("User can connect with email", async done => {
+    it("User can connect with email", async done => {
         const user = await makeUser(app);
         return request(app)
             .post('/api/auth/login')
@@ -117,7 +141,7 @@ describe("Test the login route", () => {
     });
 
     describe("User recieve bad request if parameters are missing",  () => {
-        test("Missing login", async done => {
+        it("Missing login", async done => {
             const user = await makeUser(app);
             return request(app)
                 .post('/api/auth/login')
@@ -126,7 +150,7 @@ describe("Test the login route", () => {
                 .then(() => done());
         });
 
-        test("Missing password", async done => {
+        it("Missing password", async done => {
             const user = await makeUser(app);
             return request(app)
                 .post('/api/auth/login')
@@ -136,7 +160,7 @@ describe("Test the login route", () => {
         });
     });
 
-    test("Incorrect password", async done => {
+    it("Incorrect password", async done => {
         const user = await makeUser(app);
         return request(app)
             .post('/api/auth/login')
@@ -145,7 +169,7 @@ describe("Test the login route", () => {
             .then(() => done());
     });
 
-    test("Incorrect login", async done => {
+    it("Incorrect login", async done => {
         const user = await makeUser(app);
         return request(app)
             .post('/api/auth/login')
