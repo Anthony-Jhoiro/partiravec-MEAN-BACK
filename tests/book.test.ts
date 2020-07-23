@@ -21,12 +21,6 @@ import {Types} from "mongoose";
 
 
 describe("Test the book controller", () => {
-    // const user = makeUser(app);
-
-    it("You should implement this tests", done => {
-        expect(44).toBe(44);
-        done();
-    });
 
     describe("Test the book creation controller", () => {
         test("A book should be created if the request is correct", async done => {
@@ -85,9 +79,6 @@ describe("Test the book controller", () => {
                 email: "email@contributor.com"
             });
             const book = await makeBook({
-                title: "c_title",
-                coverImage: "c_image",
-                public: false,
                 contributors: [user._id]
             });
 
@@ -106,11 +97,7 @@ describe("Test the book controller", () => {
         });
 
         test("User can not modify a book if he is connected but not a contributor", async done => {
-            const user = await makeUser({
-                username: "user_not_contributor",
-                password: "password_not_contributor",
-                email: "email_not@contributor.com"
-            });
+            const user = await makeUser();
             const book = await makeBook();
 
             await request(app)
@@ -162,10 +149,7 @@ describe("Test the book controller", () => {
             test("Test user can not add a contributor to a book if he is already a contributor", async done => {
                 const newContributor = await makeUser();
                 const book = await makeBook({
-                    title: 'title',
-                    coverImage: 'coverImage',
-                    contributors: [newContributor._id],
-                    public: false
+                    contributors: [newContributor._id]
                 });
 
                 const response = await request(app)
@@ -183,10 +167,7 @@ describe("Test the book controller", () => {
                 const user = await makeUser();
                 const oldContributor = await makeUser();
                 const book = await makeBook({
-                    title: 'title',
-                    coverImage: 'coverImage',
                     contributors: [user._id, oldContributor._id],
-                    public: false
                 });
 
                 const response = await request(app)
@@ -207,10 +188,7 @@ describe("Test the book controller", () => {
             test("Test user can not remove the main author from a book", async done => {
                 const user = await makeUser();
                 const book = await makeBook({
-                    title: 'title',
-                    coverImage: 'coverImage',
-                    contributors: [user._id],
-                    public: false
+                    contributors: [user._id]
                 });
 
                 const response = await request(app)

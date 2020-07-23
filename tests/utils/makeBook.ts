@@ -28,28 +28,26 @@ export type BookMock = {
 let bookIteration = 0;
 
 
-export const makeBook = async (book?: { title: string; coverImage: string; public: boolean, contributors: Array<any> }, user?: UserMock): Promise<BookMock> => {
-    // Set the author
-    if (!user) user = await makeUser();
-
+export const makeBook = async (data: { title?: string; coverImage?: string; public?: boolean, contributors?: Array<any>, mainAuthor?: UserMock } = {}): Promise<BookMock> => {
     bookIteration ++ ;
 
-    // Set the book
-    if (!book) book = {
-        title: "Book " + bookIteration,
-        coverImage: "image " + bookIteration,
-        contributors: [],
-        public: false
-    };
 
-    book.contributors.push(user._id);
+    // Set data
+    if (!data.mainAuthor) data.mainAuthor = await makeUser();
+    if (!data.title) data.title = "Book " + bookIteration;
+    if (!data.coverImage) data.coverImage = "image " + bookIteration;
+    if (!data.public) data.public = false;
+    if (!data.contributors) data.contributors = [];
+
+
+    data.contributors.push(data.mainAuthor._id);
 
     let dbBook = new Book({
-        title: book.title,
-        coverImage: book.coverImage,
-        public: book.public,
-        contributors: book.contributors,
-        mainAuthor: user._id,
+        title: data.title,
+        coverImage: data.coverImage,
+        public: data.public,
+        contributors: data.contributors,
+        mainAuthor: data.mainAuthor._id,
         created: Date.now(),
         updated: Date.now()
     });
@@ -65,7 +63,7 @@ export const makeBook = async (book?: { title: string; coverImage: string; publi
         _id: dbBook._id,
         title: dbBook.title,
         coverImage: dbBook.coverImage,
-        mainAuthor: user,
+        mainAuthor: data.mainAuthor,
         contributors: dbBook.contributors,
         public: dbBook.public,
         created: dbBook.created,
