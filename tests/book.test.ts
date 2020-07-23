@@ -22,6 +22,8 @@ import {Types} from "mongoose";
 
 describe("Test the book controller", () => {
 
+    process.env.TEST_SUITE = 'book-tests';
+
     describe("Test the book creation controller", () => {
         test("A book should be created if the request is correct", async done => {
             const user = await makeUser();
@@ -47,17 +49,21 @@ describe("Test the book controller", () => {
     describe("Test the book modification", () => {
         test("User can modify a book if he is connected and is the main author", async done => {
             const book = await makeBook();
+            const newBookData = {
+                title: book.title + '_updated',
+                coverImage: book.coverImage + '_updated'
+            }
             await request(app)
                 .patch("/api/book/" + book._id)
                 .set(REQUEST_TOKEN_HEADER, book.mainAuthor.token)
-                .send({title: book.title + '_updated', coverImage: book.coverImage + '_updated'})
+                .send(newBookData)
                 .then(response => {
                     expect(response.statusCode).toBe(200);
                 });
             const modifyBook = await Book.findOne({_id: book._id});
 
-            expect(modifyBook.title).toBe(book.title + '_updated');
-            expect(modifyBook.coverImage).toBe(book.coverImage + '_updated');
+            expect(modifyBook.title).toBe(newBookData.title);
+            expect(modifyBook.coverImage).toBe(newBookData.coverImage);
             done();
         });
 

@@ -14,7 +14,7 @@
 import * as mongoose from "mongoose";
 
 beforeEach(function (done) {
-        const url = `mongodb://127.0.0.1/partiravectest`;
+        const url = `mongodb://127.0.0.1/partiravectest_${process.env.TEST_SUITE}`;
 
         function clearDB() {
             for (let i in mongoose.connection.collections) {

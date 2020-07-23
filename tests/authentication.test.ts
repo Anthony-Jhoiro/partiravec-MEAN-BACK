@@ -32,12 +32,16 @@ describe("Test the api path", () => {
 });
 
 describe("Test register", () => {
+
+    process.env.TEST_SUITE = 'authentication-tests';
+
+
     it("It should create an account, if all the parameters are valid", async done => {
         await request(app)
             .post('/api/auth/register')
             .send({username: "rdmName", password: "rdmPassword", email: "rdmEmail@mail.com"})
-            .expect(200)
             .then(response => {
+                expect(response.statusCode).toBe(200);
                 expect(response.body.success).toBe("Votre compte a bien été créé !");
             });
         const user = await User.findOne({username: "rdmName",  email: "rdmEmail@mail.com"});

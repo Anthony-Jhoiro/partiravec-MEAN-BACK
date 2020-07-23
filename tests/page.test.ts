@@ -22,6 +22,8 @@ import {makePage} from "./utils/makePage";
 
 describe("Test the page controller", () => {
 
+    process.env.TEST_SUITE = 'page-tests';
+
     describe("Test the page creation controller", () => {
         test("Uer can create a page if connected and contributor to the book", async done => {
             const contributor = await makeUser();
