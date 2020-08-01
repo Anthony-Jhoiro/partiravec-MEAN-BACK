@@ -16,6 +16,8 @@ import {User} from "../models/User";
 import {imagesController} from './ImagesController';
 import {ENDPOINT} from '../tools/environment';
 import {Request, Response} from "express";
+import {requireAuth, requireInBody} from "../tools/decorators";
+import {CustomRequest} from "../tools/types";
 
 class BookController {
 
@@ -26,11 +28,10 @@ class BookController {
      * @bodyParam title string
      * @bodyParam coverImage string
      */
-    createBook(req: Request&{currentUserId: string}, res: Response) {
+    @requireAuth()
+    @requireInBody('title', 'coverImage')
+    createBook(req: CustomRequest, res: Response) {
         const body = req.body;
-        // Check request validity
-        if (!(body.title && body.coverImage))
-            return res.status(400).json({error: "Bad request"});
 
         const book = new Book({
             title: body.title,
@@ -60,11 +61,10 @@ class BookController {
      * @bodyParam coverImage string
      * @pathParam id string(hex)
      */
-    updateBook(req: Request&{currentUserId: string}, res: Response) {
+    @requireAuth()
+    @requireInBody('title', 'coverImage')
+    updateBook(req: CustomRequest, res: Response) {
         const body = req.body;
-        // Check request validity
-        if (!(body.title && body.coverImage))
-            return res.status(400).json({error: "Bad request"});
 
         const bookId = req.params.id;
         Book.findOne({_id: bookId})
@@ -100,7 +100,8 @@ class BookController {
      * @return {Promise<*>}
      * @pathParam id string
      */
-    async deleteBook(req: Request&{currentUserId: string}, res: Response) {
+    @requireAuth()
+    async deleteBook(req: CustomRequest, res: Response) {
         const book = await Book.findOne({_id: req.params.id});
         if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
         if (!book.isMainAuthor(req.currentUserId))
@@ -119,7 +120,9 @@ class BookController {
      * @bodyParam book
      * @bodyParam user
      */
-    async addAccessBook(req: Request&{currentUserId: string}, res: Response) {
+    @requireAuth()
+    @requireInBody('book', 'user')
+    async addAccessBook(req: Request & { currentUserId: string }, res: Response) {
         const body = req.body;
         const book = await Book.findOne({_id: body.book});
         if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
@@ -150,7 +153,9 @@ class BookController {
      * @param res
      * @return {Promise<*>}
      */
-    async removeAccessBook(req: Request&{currentUserId: string}, res: Response) {
+    @requireAuth()
+    @requireInBody('book', 'user')
+    async removeAccessBook(req: CustomRequest, res: Response) {
         const body = req.body;
         const book = await Book.findOne({_id: body.book});
         if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
@@ -185,11 +190,9 @@ class BookController {
      * @param res
      * @return {Promise<void>}
      */
-    async getPublicBooks(req: Request&{currentUserId: string}, res: Response) {
+    async getPublicBooks(req: CustomRequest, res: Response) {
         let books = await Book
             .find({
-                contributors: {$ne: req.currentUserId},
-                mainAuthor: {$ne: req.currentUserId},
                 public: true
             })
             .sort({updated: -1})
@@ -204,7 +207,7 @@ class BookController {
                 mainAuthor: book.mainAuthor,
                 created: book.created,
                 updated: book.updated,
-                access: false
+                access: (req.currentUserId) ? book.hasAccess(req.currentUserId) : false
             }
         });
 
@@ -218,7 +221,8 @@ class BookController {
      * @param res
      * @return {Promise<*>}
      */
-    async getBooks(req: Request&{currentUserId: string}, res: Response) {
+    @requireAuth()
+    async getBooksWhereUserIsAContributor(req: CustomRequest, res: Response) {
         let books = await Book
             .find({contributors: req.currentUserId})
             .sort({updated: -1})
@@ -246,10 +250,12 @@ class BookController {
      * @return {Promise<*>}
      * @pathParam id string
      */
-    async getBookById(req: Request&{currentUserId: string}, res: Response) {
+    async getBookById(req: CustomRequest, res: Response) {
+
         const optionalBook = await Book.findOne({_id: req.params.id});
         if (!optionalBook) return res.status(400).json({error: "Le livre n'a pas été trouvé."});
         if (!optionalBook.public) {
+            if (!req.currentUserId) return res.status(403).json({error: "Cette ressource est privée"})
             if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
                 return res.status(401).json({error: "Vous n'êtes pas autorisé à accéder à cette ressource."});
         }
@@ -260,9 +266,10 @@ class BookController {
             coverImage: optionalBook.coverImage,
             created: optionalBook.created,
             updated: optionalBook.updated,
-            access: optionalBook.hasAccess(req.currentUserId)
+            access: (req.currentUserId) ? optionalBook.hasAccess(req.currentUserId) : false
         };
-        //Add contributors
+
+        //Add the list of contributors
         book.contributors = await User
             .find({
                 $and: [

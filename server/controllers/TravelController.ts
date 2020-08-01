@@ -15,6 +15,7 @@ import {Book} from '../models/Book';
 import {Travel} from '../models/Travel';
 import {Response} from "express";
 import {CustomRequest} from "../tools/types";
+import {requireAuth, requireInBody} from "../tools/decorators";
 
 class TravelController {
     /**
@@ -43,8 +44,9 @@ class TravelController {
      * @bodyParam steps
      * @return {Promise<void>}
      */
+    @requireAuth()
+    @requireInBody('steps')
     async createTravel(req: CustomRequest, res: Response) {
-        if (!req.body.steps) return res.status(400);
 
         // get book and check access
         const book = await Book.findOne({_id: req.params.book});
@@ -65,13 +67,15 @@ class TravelController {
     }
 
     /**
-     * Create a travel
+     * Modify a travel
      * @param req
      * @param res
      * @pathParam book
      * @pathParam travel
      * @bodyParam steps
      */
+    @requireAuth()
+    @requireInBody('steps')
     async updateTravel(req: CustomRequest, res: Response) {
         // get book
         if (!req.body.steps) return res.status(400);

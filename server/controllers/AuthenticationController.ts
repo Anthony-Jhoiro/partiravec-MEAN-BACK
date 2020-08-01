@@ -16,6 +16,7 @@ import * as crypto from 'crypto';
 import {addJwtToken} from "../tools/jwtAdder";
 import {jwtVerify} from "../tools/jwtVerify";
 import {Request, Response} from "express";
+import {requireInBody} from "../tools/decorators";
 
 /**
  * Username Regex :
@@ -36,11 +37,9 @@ class AuthenticationController {
      * @bodyParam login string
      * @bodyParam password string
      */
-    login(req: Request, res: Response): Response {
+    @requireInBody('login', 'password')
+    login(req: Request, res: Response): any|Response {
         const body = req.body;
-        if (!(body.login && body.password)) {
-            return res.status(400).json("Requête incomplete");
-        }
 
         const doLogin = optionalUser => {
             const hash = crypto.createHash('sha512', optionalUser.salt);
@@ -91,12 +90,9 @@ class AuthenticationController {
      * @bodyParam password string
      * @bodyParam email string
      */
+    @requireInBody('username', 'password', 'email')
     register(req: Request, res: Response): Response {
         const body = req.body;
-        // Check request validity
-        if (!(body.username && body.password && body.email)) {
-            return res.status(400).json({error: "Requête incomplete : ", body: req.body});
-        }
 
         if (!loginRegex.test(body.username)) {
             return res.status(400).json({"error": "Le nom d'utilisateur est incorrect"});
@@ -170,6 +166,7 @@ class AuthenticationController {
         });
     }
 
+    @requireInBody('token', 'password')
     async renewPassword(req: Request, res: Response) {
         const token = req.body.token;
 
