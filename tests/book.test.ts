@@ -208,4 +208,87 @@ describe("Test the book controller", () => {
             });
         });
     });
+
+    describe("Test Visitors access", () => {
+        test("Test Visitors have access to public books", async done => {
+            const publicBook = await makeBook({public: true});
+            const response = await request(app)
+                .get('/api/book/public')
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body.length > 1);
+
+            expect(response.body)
+                .toEqual(expect.arrayContaining([
+                    expect.objectContaining({
+                        public: true,
+                        _id: publicBook._id.toString(),
+                        title: publicBook.title,
+                        coverImage: publicBook.coverImage,
+                        access: false
+                    })
+                ]));
+            done();
+        });
+
+        test("Test public book request do not return private book", async done => {
+            const publicBook = await makeBook({public: false});
+            const response = await request(app)
+                .get('/api/book/public')
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body)
+                .toEqual(expect.not.arrayContaining([
+                    expect.objectContaining({
+                        public: true,
+                        _id: publicBook._id.toString(),
+                        title: publicBook.title,
+                        coverImage: publicBook.coverImage,
+                        access: false
+                    })
+                ]));
+            done();
+        });
+
+        test("Test Visitors don't have access to private books", async done => {
+            const response = await request(app)
+                .get('/api/book')
+
+            expect(response.statusCode).toBe(403);
+
+            done();
+        });
+
+
+        test("Test Visitors can read public book", async done => {
+            const publicBook = await makeBook({public: true});
+            const response = await request(app)
+                .get('/api/book/' + publicBook._id);
+
+            expect(response.statusCode).toBe(200);
+
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    _id: publicBook._id.toString(),
+                    title: publicBook.title,
+                    coverImage: publicBook.coverImage,
+                    access: false
+                })
+            );
+
+            done();
+        });
+
+        test("Test Visitors can not read private book", async done => {
+            const privateBook = await makeBook({public: false});
+            const response = await request(app)
+                .get('/api/book/' + privateBook._id);
+
+            expect(response.statusCode).toBe(403);
+
+            done();
+        });
+    });
 });

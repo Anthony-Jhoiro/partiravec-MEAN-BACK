@@ -59,6 +59,13 @@ class AdminController {
             return res.json({success: `done ${images.length} items`});
         });
     }
+
+    // @requireAuth()
+    // @requireInQuery('a', 'b', 'c')
+    // @requireInBody('a', 'b', 'c')
+    defaultRoute(req, res) {
+        res.json({Hello: " World !"});
+    }
 }
 
 export const adminController = new AdminController();

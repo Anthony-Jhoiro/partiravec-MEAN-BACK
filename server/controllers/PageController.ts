@@ -17,6 +17,7 @@ import {ENDPOINT} from '../tools/environment';
 import {imagesController} from './ImagesController';
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
+import {requireAuth, requireInBody} from "../tools/decorators";
 
 class PageController {
     /**
@@ -28,6 +29,8 @@ class PageController {
      * @bodyParam images string[]
      * @bodyParam location {lat, lng, label}
      */
+    @requireInBody('title', 'content', 'images', 'location')
+    @requireAuth()
     async addPage(req: CustomRequest, res: Response) {
         const body = req.body;
         const currentUser = req.currentUserId;
@@ -78,6 +81,8 @@ class PageController {
      * @bodyParam images string[]
      * @bodyParam location {lat, lng, label}
      */
+    @requireAuth()
+    @requireInBody('title', 'content', 'images', 'location')
     async updatePage(req: CustomRequest, res: Response) {
         const body = req.body;
         const currentUser = req.currentUserId;
@@ -113,6 +118,7 @@ class PageController {
      * @requestParam book string
      * @requestParam page string
      */
+    @requireAuth()
     async deletePage(req: CustomRequest, res: Response) {
         const currentUser = req.currentUserId;
 

@@ -27,23 +27,22 @@ import {adminController} from './controllers/AdminController';
 
 
 export const loadRoutes = app => {
+    app.use('/api', AuthenticationMiddleware);
     // test Route
-    app.get('/api', (req, res) =>
-        res.json({"Hello": "World !"})
-    );
+    app.get('/api',  adminController.defaultRoute);
+    app.post('/api',  adminController.defaultRoute);
 
     // Authentication
     app.post('/api/auth/login', authenticationController.login);
     app.post('/api/auth/register', authenticationController.register);
 
     // Books
-    app.use('/api/book', AuthenticationMiddleware); // Middleware for books and pages
     app.post('/api/book', bookController.createBook);
     app.patch('/api/book/:id', bookController.updateBook);
     app.delete('/api/book/:id', bookController.deleteBook);
     app.post('/api/book/access/add', bookController.addAccessBook);
     app.post('/api/book/access/remove', bookController.removeAccessBook);
-    app.get('/api/book', bookController.getBooks);
+    app.get('/api/book', bookController.getBooksWhereUserIsAContributor);
     app.get('/api/book/public', bookController.getPublicBooks);
     app.get('/api/book/:id', bookController.getBookById);
 
@@ -65,26 +64,21 @@ export const loadRoutes = app => {
     app.get('/api/images/:image', ImageMiddleware, imagesController.getImage);
 
     // Users
-    app.use('/api/users', AuthenticationMiddleware);
     app.get('/api/users', userController.getUsersByName);
 
     // Geocoding
-    app.use('/api/geocoding', AuthenticationMiddleware);
     app.get('/api/geocoding', geocodingController.getLocationFromAddress);
 
     // Countries
-    app.use('/api/countries', AuthenticationMiddleware);
     app.get('/api/book/:book/countries', pageController.getCountriesWithLocations);
     app.get('/api/book/:book/countries/:country/page', pageController.getPagesFromCountry);
 
-    app.use('/api/group', AuthenticationMiddleware);
     app.post('/api/group', friendsController.createRoom);
     app.get('/api/group', friendsController.getRooms);
     app.get('/api/group/friend', friendsController.getRoomFromFriend);
     app.get('/api/group/:room', friendsController.getRoom);
 
     // Friends
-    app.use('/api/friends', AuthenticationMiddleware);
     app.get('/api/friends', friendsController.getFriends);
     app.post('/api/friends', friendsController.addFriend);
     app.delete('/api/friends/:friend', friendsController.removeFriend);

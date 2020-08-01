@@ -17,8 +17,10 @@ import {User} from "../models/User";
 import {sign} from 'jsonwebtoken';
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
+import {requireInBody} from "../tools/decorators";
 
 class MailController {
+    @requireInBody('login')
     async passwordMail(req: CustomRequest, res: Response) {
 
         let user;

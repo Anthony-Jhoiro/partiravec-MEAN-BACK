@@ -14,6 +14,7 @@
 import {verify} from 'jsonwebtoken';
 import {JWT_SECRET} from "../tools/environment";
 import {addJwtToken} from "../tools/jwtAdder";
+import {REQUEST_TOKEN_HEADER} from "../tools/constants";
 
 /**
  * Middleware to control that the pangolin is connected
@@ -25,8 +26,8 @@ import {addJwtToken} from "../tools/jwtAdder";
  */
 export const AuthenticationMiddleware = (req, res, next) => {
   // Get the token
-  const token = req.headers["x-access-token"];
-  if (!token) return res.status(403).json({error: "Vous n'êtes pas connecté"});
+  const token = req.headers[REQUEST_TOKEN_HEADER];
+  if (!token) return next();
 
   // Verify the token and add a new one
   verify(token, JWT_SECRET, (err, decoded) => {
@@ -37,3 +38,4 @@ export const AuthenticationMiddleware = (req, res, next) => {
     next();
   });
 };
+

@@ -15,9 +15,12 @@ import {GOOGLE_MAPS_API_KEY} from "../tools/environment"
 import * as request from "request";
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
+import {requireInQuery} from "../tools/decorators";
 
 class GeocodingController {
 
+
+    @requireInQuery('address')
     getLocationFromAddress(req: CustomRequest, res: Response) {
 
         if (!(typeof req.query.address === 'string')) return;
