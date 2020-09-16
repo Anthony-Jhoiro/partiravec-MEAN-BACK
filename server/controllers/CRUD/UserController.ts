@@ -11,14 +11,14 @@
  *
  */
 
-import {User} from '../models/User';
-import {CustomRequest} from "../tools/types";
+import {User} from '../../models/User';
+import {CustomRequest} from "../../tools/types";
 import {Response} from "express";
-import {Book} from "../models/Book";
-import {requireAuth, requireInBody} from "../tools/decorators";
-import {Page} from "../models/Page";
+import {Book} from "../../models/Book";
+import {requireAuth, requireInBody} from "../../tools/decorators";
+import {Page} from "../../models/Page";
 import {Expo} from "expo-server-sdk";
-import { notificationController } from './NotificationController';
+import { notificationController } from '../NotificationController';
 
 class UserController {
 

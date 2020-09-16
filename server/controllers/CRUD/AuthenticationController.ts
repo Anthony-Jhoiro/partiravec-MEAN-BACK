@@ -11,13 +11,13 @@
  *
  */
 
-import {User, UserDocument} from '../models/User';
+import {User, UserDocument} from '../../models/User';
 import * as crypto from 'crypto';
-import {addJwtToken} from "../tools/jwtAdder";
-import {jwtVerify} from "../tools/jwtVerify";
+import {addJwtToken} from "../../tools/jwtAdder";
+import {jwtVerify} from "../../tools/jwtVerify";
 import {Request, Response} from "express";
-import {requireInBody} from "../tools/decorators";
-import { INVALID_LOGIN, INVALID_PASSWORD, USERNAME_TAKEN, EMAIL_TAKEN, SERVER_ERROR } from '../tools/ErrorTypes';
+import {requireInBody} from "../../tools/decorators";
+import { INVALID_LOGIN, INVALID_PASSWORD, USERNAME_TAKEN, EMAIL_TAKEN, SERVER_ERROR } from '../../tools/ErrorTypes';
 
 /**
  * Username Regex :

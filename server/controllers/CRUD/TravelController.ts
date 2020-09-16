@@ -11,11 +11,11 @@
  *
  */
 
-import {Book} from '../models/Book';
-import {Travel} from '../models/Travel';
+import {Book} from '../../models/Book';
+import {Travel} from '../../models/Travel';
 import {Response} from "express";
-import {CustomRequest} from "../tools/types";
-import {requireAuth, requireInBody} from "../tools/decorators";
+import {CustomRequest} from "../../tools/types";
+import {requireAuth, requireInBody} from "../../tools/decorators";
 
 class TravelController {
     /**

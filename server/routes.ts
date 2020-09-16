@@ -11,19 +11,20 @@
  *
  */
 
-import {authenticationController} from './controllers/AuthenticationController';
-import {bookController} from './controllers/BookController';
-import {pageController} from './controllers/PageController';
-import {imagesController} from './controllers/ImagesController';
-import {userController} from './controllers/UserController';
+import {authenticationController} from './controllers/CRUD/AuthenticationController';
+import {bookController} from './controllers/CRUD/BookController';
+import {bookContributorsController} from './controllers/CRUD/BookContributorsController';
+import {pageController} from './controllers/CRUD/PageController';
+import {imagesController} from './controllers/CRUD/ImagesController';
+import {userController} from './controllers/CRUD/UserController';
 import {AuthenticationMiddleware} from "./middlewares/AuthenticationMiddleware";
 import {ImageMiddleware} from "./middlewares/ImageMiddleware";
 import UploadMiddleware from "./middlewares/UploadMiddleware";
-import {geocodingController} from "./controllers/GeocodingController";
-import {friendsController} from './controllers/FriendsController';
+import {geocodingController} from "./controllers/CRUD/GeocodingController";
+import {friendsController} from './controllers/CRUD/FriendsController';
 import {mailController} from './controllers/MailController';
-import {travelController} from './controllers/TravelController';
-import {adminController} from './controllers/AdminController';
+import {travelController} from './controllers/CRUD/TravelController';
+import {adminController} from './controllers/CRUD/AdminController';
 
 
 export const loadRoutes = app => {
@@ -40,8 +41,8 @@ export const loadRoutes = app => {
     app.post('/api/book', bookController.createBook);
     app.patch('/api/book/:id', bookController.updateBook);
     app.delete('/api/book/:id', bookController.deleteBook);
-    app.post('/api/book/access/add', bookController.addAccessBook);
-    app.post('/api/book/access/remove', bookController.removeAccessBook);
+    app.post('/api/book/access/add', bookContributorsController.addAccessBook);
+    app.post('/api/book/access/remove', bookContributorsController.removeAccessBook);
     app.get('/api/book', bookController.getBooksWhereUserIsAContributor);
     app.get('/api/book/public', bookController.getPublicBooks);
     app.get('/api/book/:id', bookController.getBookById);

@@ -11,15 +11,15 @@
  *
  */
 
-import {CustomRequest} from "../tools/types";
+import {CustomRequest} from "../../tools/types";
 import {Response} from "express";
 
-import {User} from '../models/User';
-import {Inbox} from '../models/Inbox';
-import {Group} from '../models/Group';
-import {notificationController} from './NotificationController';
-import {FriendRequest} from '../models/FriendRequest';
-import {requireAuth} from "../tools/decorators";
+import {User} from '../../models/User';
+import {Inbox} from '../../models/Inbox';
+import {Group} from '../../models/Group';
+import {notificationController} from '../NotificationController';
+import {FriendRequest} from '../../models/FriendRequest';
+import {requireAuth} from "../../tools/decorators";
 
 class FriendsController {
 

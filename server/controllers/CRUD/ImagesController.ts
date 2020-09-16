@@ -11,12 +11,12 @@
  *
  */
 
-import {Resize} from "../tools/Resize";
-import { UPLOAD_FOLDER, ENDPOINT, IMAGE_STORAGE_MODE } from "../tools/environment";
+import {Resize} from "../../tools/Resize";
+import { UPLOAD_FOLDER, ENDPOINT, IMAGE_STORAGE_MODE } from "../../tools/environment";
 import {readFile} from 'fs';
-import UploadMiddleware  from "../middlewares/UploadMiddleware";
-import {Image} from "../models/Image";
-import {Book} from "../models/Book";
+import UploadMiddleware  from "../../middlewares/UploadMiddleware";
+import {Image} from "../../models/Image";
+import {Book} from "../../models/Book";
 import {Request, Response} from "express";
 
 const LOCALSTORAGE = "local";

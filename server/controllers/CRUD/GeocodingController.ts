@@ -11,11 +11,11 @@
  *
  */
 
-import {GOOGLE_MAPS_API_KEY} from "../tools/environment"
+import {GOOGLE_MAPS_API_KEY} from "../../tools/environment"
 import * as request from "request";
-import {CustomRequest} from "../tools/types";
+import {CustomRequest} from "../../tools/types";
 import {Response} from "express";
-import {requireInQuery} from "../tools/decorators";
+import {requireInQuery} from "../../tools/decorators";
 
 class GeocodingController {
 

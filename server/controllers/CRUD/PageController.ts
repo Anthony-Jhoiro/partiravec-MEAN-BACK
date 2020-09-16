@@ -11,13 +11,13 @@
  *
  */
 
-import {Book} from "../models/Book";
-import {Page} from "../models/Page";
-import {ENDPOINT} from '../tools/environment';
+import {Book} from "../../models/Book";
+import {Page} from "../../models/Page";
+import {ENDPOINT} from '../../tools/environment';
 import {imagesController} from './ImagesController';
-import {CustomRequest} from "../tools/types";
+import {CustomRequest} from "../../tools/types";
 import {Response} from "express";
-import {requireAuth, requireInBody} from "../tools/decorators";
+import {requireAuth, requireInBody} from "../../tools/decorators";
 
 class PageController {
     /**
