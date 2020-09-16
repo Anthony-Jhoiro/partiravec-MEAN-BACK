@@ -18,6 +18,7 @@ import {ENDPOINT} from '../tools/environment';
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
 import {Expo} from 'expo-server-sdk';
+import {SERVER_ERROR} from '../tools/ErrorTypes';
 
 class AdminController {
 
@@ -56,7 +57,7 @@ class AdminController {
 
         // create the images
         Image.create(images, err => {
-            if (err) return res.status(500).json({error: err});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: `done ${images.length} items`});
         });
     }

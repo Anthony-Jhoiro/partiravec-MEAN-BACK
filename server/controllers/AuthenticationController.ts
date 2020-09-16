@@ -17,6 +17,7 @@ import {addJwtToken} from "../tools/jwtAdder";
 import {jwtVerify} from "../tools/jwtVerify";
 import {Request, Response} from "express";
 import {requireInBody} from "../tools/decorators";
+import { INVALID_LOGIN, INVALID_PASSWORD, USERNAME_TAKEN, EMAIL_TAKEN, SERVER_ERROR } from '../tools/ErrorTypes';
 
 /**
  * Username Regex :
@@ -45,7 +46,7 @@ class AuthenticationController {
             const hash = crypto.createHash('sha512', optionalUser.salt);
             hash.update(body.password);
             if (hash.digest('hex') !== optionalUser.password)
-                return res.status(401).json({error: "Mot de passe incorrect"});
+                return res.status(401).send(INVALID_PASSWORD)
 
             const longDuration = (body.longDuration) ? body.longDuration : false;
 
@@ -67,7 +68,7 @@ class AuthenticationController {
             // Authentication with email
             User.findOne({email: body.login})
                 .then(optionalUser => {
-                    if (!optionalUser) return res.status(400).json({error: "L'adresse email n'existe pas"});
+                    if (!optionalUser) return res.status(400).send(INVALID_LOGIN)
 
                     return doLogin(optionalUser);
                 });
@@ -76,7 +77,7 @@ class AuthenticationController {
             // Authentication with password
             User.findOne({username: body.login})
                 .then(optionalUser => {
-                    if (!optionalUser) return res.status(400).json({error: "L'identifiant n'existe pas"});
+                    if (!optionalUser) return res.status(400).send(INVALID_LOGIN)
 
                     return doLogin(optionalUser);
                 });
@@ -97,18 +98,18 @@ class AuthenticationController {
         const body = req.body;
 
         if (!loginRegex.test(body.username)) {
-            return res.status(400).json({"error": "Le nom d'utilisateur est incorrect"});
+            return res.status(400).send(INVALID_LOGIN)
         }
 
         // Check email unique
         User.findOne({username: body.username})
             .then(optionalUser => {
-                if (optionalUser) return res.status(400).json({error: "Le nom d'utilisateur est déjà utilisé"});
+                if (optionalUser) return res.status(400).send(USERNAME_TAKEN)
 
                 // check username unique
                 User.findOne({email: body.email})
                     .then(optionalUser => {
-                        if (optionalUser) return res.status(400).json({error: "L'adresse email est déjà utilisée"});
+                        if (optionalUser) return res.status(400).send(EMAIL_TAKEN)
 
                         // set salt and hash password
                         const salt = crypto
@@ -133,10 +134,7 @@ class AuthenticationController {
 
                         user.save((err, user: UserDocument) => {
                             if (err) {
-                                return res.status(500).json({
-                                    error: "Impossible de créer l'utilisateur",
-                                    message: err.error
-                                })
+                                return res.status(500).send(SERVER_ERROR)
                             }
 
                             addJwtToken(res, {id: user._id});

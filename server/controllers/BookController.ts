@@ -18,6 +18,7 @@ import {ENDPOINT} from '../tools/environment';
 import {Request, Response} from "express";
 import {requireAuth, requireInBody} from "../tools/decorators";
 import {CustomRequest} from "../tools/types";
+import { SERVER_ERROR, RESOURCE_NOT_FOUND, UNAUTHORIZE, USER_NOT_FOUND, USELESS, NO_PRIVILEGE, LOGIN_NEEDED } from "../tools/ErrorTypes";
 
 class BookController {
 
@@ -43,8 +44,7 @@ class BookController {
             updated: Date.now()
         });
         book.save((err, book) => {
-            if (err) return res.status(500).json({error: "Une erreure est survenue pendant l'ajout d'un livre."});
-
+            if (err) return res.status(500).send(SERVER_ERROR);
             // create a shield on imageCover
             if (book.coverImage.includes(ENDPOINT))
                 imagesController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
@@ -70,10 +70,9 @@ class BookController {
         Book.findOne({_id: bookId})
             .then(optionalBook => {
                 // Check if the user can update the book
-                if (!optionalBook) return res.status(400).json({error: "Le livre n'existe pas"});
+                if (!optionalBook) return res.status(404).send(RESOURCE_NOT_FOUND)
                 if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
-                    return res.status(401).json({error: "Vous n'êtes pas autorisé à accéder à cette ressource."});
-
+                    return res.status(401).send(UNAUTHORIZE);
                 // Update infos
                 optionalBook.title = body.title;
                 optionalBook.coverImage = body.coverImage;
@@ -82,7 +81,7 @@ class BookController {
 
                 // Save it
                 optionalBook.save((err, book) => {
-                    if (err) return res.status(500).json({error: "Une erreure est survenue pendant la modification du livre."});
+                    if (err) return res.status(500).send(SERVER_ERROR);
 
                     // create a shield on imageCover
                     if (book.coverImage.includes(ENDPOINT))
@@ -94,7 +93,10 @@ class BookController {
     }
 
     /**
-     * Delete a book
+     * Delete a book :
+     * * 200 - book deleted  
+     * * 404 - book not found  
+     * * 401 - user can not delete the book  
      * @param req
      * @param res
      * @return {Promise<*>}
@@ -102,12 +104,17 @@ class BookController {
      */
     @requireAuth()
     async deleteBook(req: CustomRequest, res: Response) {
-        const book = await Book.findOne({_id: req.params.id});
-        if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
+        // Check if the book exists
+        const bookId = req.params.id;
+        const book = await Book.findOne({_id: bookId});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND)
+
+        // Check if the user has the authorisation to delete the book
         if (!book.isMainAuthor(req.currentUserId))
-            return res.status(401).json({error: "Vous n'avez pas l'autorisation pour modifier ce livre."});
-        Book.deleteOne({_id: req.params.id}, err => {
-            if (err) return res.status(500).json({error: "Echec pendant la modification du livre"});
+            return res.status(401).send(UNAUTHORIZE);
+
+        Book.deleteOne({_id: bookId}, err => {
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "Le livre a bien été supprimé"});
         });
     }
@@ -125,24 +132,23 @@ class BookController {
     async addAccessBook(req: Request & { currentUserId: string }, res: Response) {
         const body = req.body;
         const book = await Book.findOne({_id: body.book});
-        if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND);
 
         // Check that the current user has access
         if (!book.hasAccess(req.currentUserId))
-            return res.status(401).json({error: "Vous n'avez pas l'autorisation pour modifier ce livre."});
-
+            return res.status(401).send(UNAUTHORIZE);
         // check that the other user exists
         const user = await User.findOne({_id: body.user});
-        if (!user) return res.status(401).json({error: "L'utilisateur n'existe pas"});
+        if (!user) return res.status(404).send(USER_NOT_FOUND);
 
         // Check that the other user has no access to the project
         if (book.hasAccess(body.user))
-            return res.status(400).json({error: "L'utilisateur a déjà accès au projet"});
+            return res.status(400).send(USELESS);
 
         // add the user to contributors
         book.contributors.push(body.user)
         book.save((err) => {
-            if (err) return res.status(500).json("Une erreur est survenue pendant l'ajout de l'utilisateur");
+            if (err) return res.status(500).send(SERVER_ERROR)
             return res.json({success: "L'utilisateur a été rajouté aux contributeurs"});
         });
     }
@@ -158,28 +164,28 @@ class BookController {
     async removeAccessBook(req: CustomRequest, res: Response) {
         const body = req.body;
         const book = await Book.findOne({_id: body.book});
-        if (!book) return res.status(400).json({error: "Le livre n'existe pas."});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND)
 
         // Check that the current user has access
         if (!book.hasAccess(req.currentUserId))
-            return res.status(401).json({error: "Vous n'avez pas l'autorisation pour modifier ce livre."});
+            return res.status(401).send(UNAUTHORIZE);
 
         // check that the other user exists
         const user = await User.findOne({_id: body.user});
-        if (!user) return res.status(401).json({error: "L'utilisateur n'existe pas"});
+        if (!user) return res.status(404).send(USER_NOT_FOUND)
 
         // Check that the other user has no access to the project
         if (!book.hasAccess(body.user))
-            return res.status(400).json({error: "L'utilisateur n'a déjà pas accès au projet"});
+            return res.status(400).send(USELESS);
 
         // Check if the user is not the book main author
         if (book.mainAuthor == body.user)
-            return res.status(400).json({error: "Vous ne pouvez pas supprimer le propriétaire du livre"});
+            return res.status(400).send(NO_PRIVILEGE);
 
         // add the user to contributors
         book.contributors.splice(book.contributors.indexOf(body.user), 1);
         book.save((err) => {
-            if (err) return res.status(500).json("Une erreur est survenue pendant la suppression  de l'utilisateur");
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "L'utilisateur a été retiré des contributeurs"});
         });
     }
@@ -253,11 +259,11 @@ class BookController {
     async getBookById(req: CustomRequest, res: Response) {
 
         const optionalBook = await Book.findOne({_id: req.params.id});
-        if (!optionalBook) return res.status(400).json({error: "Le livre n'a pas été trouvé."});
+        if (!optionalBook) return res.status(404).send(RESOURCE_NOT_FOUND);
         if (!optionalBook.public) {
-            if (!req.currentUserId) return res.status(403).json({error: "Cette ressource est privée"})
+            if (!req.currentUserId) return res.status(403).send(LOGIN_NEEDED);
             if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
-                return res.status(401).json({error: "Vous n'êtes pas autorisé à accéder à cette ressource."});
+                return res.status(401).send(UNAUTHORIZE);
         }
 
         let book: any = {
