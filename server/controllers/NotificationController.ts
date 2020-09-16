@@ -11,43 +11,71 @@
  *
  */
 
-import {ConnectedUser} from './ConnectedUser';
-import {Socket} from "socket.io";
-import {ID} from "../tools/types";
+import { ConnectedUser } from "./ConnectedUser";
+import { Socket } from "socket.io";
+import { ID } from "../tools/types";
+import { User } from "../models/User";
+import { Expo } from "expo-server-sdk";
 
 class NotificationController {
-    clients = [];
-    onConnection(socket: Socket) {
-        const user = new ConnectedUser(socket);
-        this.clients.push(user);
-        return user;
-    }
+  clients = [];
+  onConnection(socket: Socket) {
+    const user = new ConnectedUser(socket);
+    this.clients.push(user);
+    return user;
+  }
 
-
-    clientDisconnected(client) {
-        for (let index in this.clients) {
-            if (this.clients[index].userId === client.userId) {
-                this.clients.splice(Number(index), 1);
-                break;
-            }
-        }
+  clientDisconnected(client) {
+    for (let index in this.clients) {
+      if (this.clients[index].userId === client.userId) {
+        this.clients.splice(Number(index), 1);
+        break;
+      }
     }
+  }
 
-    /**
-     *
-     * @param userId
-     * @return {null|ConnectedUser}
-     */
-    getSocketFromUserId(userId: ID) {
-        const user = this.clients.filter(c => {
-            return c.userInfos.userId === userId
-        });
-        if (user.length > 0) {
-            return user[0];
-        }
-        return null;
+  async sendNotificationTo(userId: ID, body: string, data: any = {}) {
+    const user = await User.findOne({ _id: userId });
+    console.group("hey")
+    const expo = new Expo();
+
+    const messages = [];
+    user.devices.forEach((device) => {
+      messages.push({
+        to: device,
+        sound: "default",
+        body,
+        data,
+      });
+    });
+
+    let chunks = expo.chunkPushNotifications(messages);
+    let tickets = [];
+
+    for (let chunk of chunks) {
+      try {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        tickets.push(...ticketChunk);
+      } catch (error) {
+        throw error;
+      }
     }
+  }
+
+  /**
+   *
+   * @param userId
+   * @return {null|ConnectedUser}
+   */
+  getSocketFromUserId(userId: ID) {
+    const user = this.clients.filter((c) => {
+      return c.userInfos.userId === userId;
+    });
+    if (user.length > 0) {
+      return user[0];
+    }
+    return null;
+  }
 }
 
 export const notificationController = new NotificationController();
-

@@ -22,7 +22,8 @@ export type UserDocument = Document & {
     created: Date,
     picture: string,
     friends: Array<string | UserDocument>;
-    updated: Date
+    updated: Date;
+    devices: Array<string>;
 };
 
 const userSchema = new Schema({
@@ -36,6 +37,10 @@ const userSchema = new Schema({
     friends: [{
         type: Schema.Types.ObjectId,
         ref: 'User',
+        default: []
+    }],
+    devices: [{
+        type: String,
         default: []
     }],
     updated: {type: Date, default: Date.now}

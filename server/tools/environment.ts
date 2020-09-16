@@ -17,7 +17,7 @@ if (process.env.ENVIRONMENT !== 'prod') {
 }
 
 
-export const PORT = process.env.PORT;
+export const PORT = process.env.PORT || 8080;
 export const ENVIRONMENT = process.env.ENVIRONMENT || 'dev';
 export const JWT_SECRET = process.env.JWT_SECRET || "abracadabra";
 export const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1/partiravec";

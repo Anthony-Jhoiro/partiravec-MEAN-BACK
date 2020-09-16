@@ -38,7 +38,7 @@ class AuthenticationController {
      * @bodyParam password string
      */
     @requireInBody('login', 'password')
-    login(req: Request, res: Response): any|Response {
+    login(req: Request, res: Response): any | Response {
         const body = req.body;
 
         const doLogin = optionalUser => {
@@ -47,7 +47,9 @@ class AuthenticationController {
             if (hash.digest('hex') !== optionalUser.password)
                 return res.status(401).json({error: "Mot de passe incorrect"});
 
-            addJwtToken(res, {id: optionalUser._id});
+            const longDuration = (body.longDuration) ? body.longDuration : false;
+
+            addJwtToken(res, {id: optionalUser._id}, longDuration);
 
             return res.json({
                 success: "Vous êtes connecté !",

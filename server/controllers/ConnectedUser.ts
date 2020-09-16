@@ -51,7 +51,6 @@ export class ConnectedUser {
                 }
 
             });
-
     }
 
     onMessage(data, next) {

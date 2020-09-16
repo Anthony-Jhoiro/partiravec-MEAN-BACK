@@ -1,0 +1,9 @@
+export const SERVER_ERROR = "SERVER_ERROR";
+export const CREATION_FAIL = "CREATION_FAIL";
+export const INVALID_PARAMETER = "INVALID_PARAMETER";
+export const INVLAID_PASSWORD = "INVALID_PASSWORD";
+export const INVALID_LOGIN = "INVALID_LOGIN";
+export const NOT_FOUND = "NOT_FOUND";
+export const UNAUTHORIZE = "UNAUTHORIZE";
+export const USELESS = "USELESS";
+export const NO_PRIVILEGE = "NO_PRIVILEGE";

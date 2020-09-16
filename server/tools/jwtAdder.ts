@@ -14,14 +14,27 @@
 import {sign} from "jsonwebtoken";
 import {JWT_SECRET}  from "./environment";
 
+const MONTH_DURATION = '30d';
+const DAY_DURATION = '1d';
+
 /**
  * Add a jwt token to the response
  * @param res
  * @param data
+ * @param longDuration
  */
-export const addJwtToken = (res, data) =>{
-  const token = sign(data, JWT_SECRET, {expiresIn: '1d'});
-  res.set('_token', token);
+export const addJwtToken = (res, data, longDuration = false) =>{
+  const expireTime = longDuration ? MONTH_DURATION : DAY_DURATION;
+
+
+  const payload = {
+    ...data,
+    longDuration
+  }
+
+  const authenticationToken = sign(payload, JWT_SECRET, {expiresIn: expireTime});
+
+  res.set('_token', authenticationToken);
 } ;
 
 

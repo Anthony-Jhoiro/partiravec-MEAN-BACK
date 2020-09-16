@@ -26,16 +26,22 @@ import {REQUEST_TOKEN_HEADER} from "../tools/constants";
  */
 export const AuthenticationMiddleware = (req, res, next) => {
   // Get the token
+  console.log(`[${req.method}] => ${req.url}`);
+
   const token = req.headers[REQUEST_TOKEN_HEADER];
   if (!token) return next();
+
+
 
   // Verify the token and add a new one
   verify(token, JWT_SECRET, (err, decoded) => {
     if (err) return res.status(401).json({error: "Vous avez été déconnecté"});
 
     req.currentUserId = decoded.id;
-    addJwtToken(res, {id: decoded.id});
-    next();
+    const longDuration = !!decoded.longDuration;
+
+    addJwtToken(res, {id: decoded.id}, longDuration);
+    return next();
   });
 };
 

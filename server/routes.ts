@@ -65,6 +65,8 @@ export const loadRoutes = app => {
 
     // Users
     app.get('/api/users', userController.getUsersByName);
+    app.post('/api/users/deviceId', userController.addDeviceId);
+    app.get('/api/user/map', userController.getUserMap);
 
     // Geocoding
     app.get('/api/geocoding', geocodingController.getLocationFromAddress);
@@ -91,6 +93,9 @@ export const loadRoutes = app => {
     app.post('/api/password/renew', authenticationController.renewPassword);
 
     app.post('/api/admin/set/images', adminController.setImageOwning);
+
+
+    app.post('/api/admin/notif', adminController.testNotifications);
 
 
 }

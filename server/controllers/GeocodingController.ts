@@ -27,7 +27,7 @@ class GeocodingController {
         request("https://maps.googleapis.com/maps/api/geocode/json?address=" + encodeURI(req.query.address) + "&key=" + GOOGLE_MAPS_API_KEY,
             (error, response, body) => {
                 const parsedBody = JSON.parse(body);
-                if (error) return res.status(400).json({
+                if (error) return res.status(500).json({
                     error: "Une erreur est survenue pendant la récupération des données",
                     message: error
                 });

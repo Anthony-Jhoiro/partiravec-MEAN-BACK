@@ -19,6 +19,7 @@ import {Inbox} from '../models/Inbox';
 import {Group} from '../models/Group';
 import {notificationController} from './NotificationController';
 import {FriendRequest} from '../models/FriendRequest';
+import {requireAuth} from "../tools/decorators";
 
 class FriendsController {
 
@@ -42,7 +43,7 @@ class FriendsController {
 
         currentUser.friends.push(userToAdd);
         currentUser.save(err => {
-            if (err) return res.status(400).json({error: "Il semble que vous ne puissiez pas  être ami avec cet utilisateur"});
+            if (err) return res.status(500).json({error: "Il semble que vous ne puissiez pas  être ami avec cet utilisateur"});
             return res.json({success: "Vous êtes maintenant amis !"});
         });
     }
@@ -65,11 +66,12 @@ class FriendsController {
 
         currentUser.friends.splice(userIndex, 1);
         currentUser.save(err => {
-            if (err) return res.status(400).json({error: "Il semble que vous soyez inséparables"});
+            if (err) return res.status(500).json({error: "Il semble que vous soyez inséparables"});
             return res.json({success: "Vous n'êtes plus amis !"});
         });
     }
 
+    @requireAuth()
     async getFriends(req: CustomRequest, res: Response) {
         const currentUser = await User
             .findOne({_id: req.currentUserId})
@@ -95,7 +97,7 @@ class FriendsController {
             _id: req.params.room,
             contributors: currentUser
         }).populate('contributors', 'username');
-        if (!_group) return res.status(400).json({error: "Le groupe demandé n'existe pas."});
+        if (!_group) return res.status(404).json({error: "Le groupe demandé n'existe pas."});
 
         const group: any = {
             name: _group.name,

@@ -14,6 +14,11 @@
 import {User} from '../models/User';
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
+import {Book} from "../models/Book";
+import {requireAuth, requireInBody} from "../tools/decorators";
+import {Page} from "../models/Page";
+import {Expo} from "expo-server-sdk";
+import { notificationController } from './NotificationController';
 
 class UserController {
 
@@ -35,6 +40,46 @@ class UserController {
                 $and: idQuery
 
             }, {username: 1, _id: 1}).limit(5));
+    }
+
+    @requireAuth()
+    async getUserMap(req: CustomRequest, res: Response): Promise<Response> {
+        let books = await Book
+            .find({contributors: req.currentUserId}, {title: 1});
+
+        let result = []
+        for (let book of books) {
+            const pages = await Page.find({book: book._id}, {location: 1, title: 1});
+            result.push({ _id: book._id, title: book.title, pages })
+        }
+
+        return res.json(result);
+    }
+
+    /**
+     * add a device id to the list of devices
+     * @param req Request
+     * @param res Response
+     */
+    @requireAuth()
+    @requireInBody('deviceId')
+    async addDeviceId(req: CustomRequest, res: Response) {
+        const user = await User.findOne({_id: req.currentUserId});
+        const deviceId = req.body.deviceId;
+
+        // Check deviceId
+        if (!Expo.isExpoPushToken(deviceId)) {
+            return res.json({error: `Push token ${deviceId} is not a valid Expo push token`});
+        }
+        // If the device is not register, add it to the list
+        if (user.devices.indexOf(deviceId) === -1) {
+            user.devices.push(deviceId);
+            
+            user.save((err, u)=> {
+                return res.json({message: 'L\'apareil a bien été enregistré'});
+            })
+        }
+        return res.json({message: 'L\'appareil était déjà enregistré'});
     }
 }
 

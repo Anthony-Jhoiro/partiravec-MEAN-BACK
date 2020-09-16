@@ -17,6 +17,7 @@ import {Image} from '../models/Image';
 import {ENDPOINT} from '../tools/environment';
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
+import {Expo} from 'expo-server-sdk';
 
 class AdminController {
 
@@ -65,6 +66,41 @@ class AdminController {
     // @requireInBody('a', 'b', 'c')
     defaultRoute(req, res) {
         res.json({Hello: " World !"});
+    }
+
+    testNotifications(req: CustomRequest, res: Response) {
+        const expo = new Expo();
+
+        let messages = [];
+        let pushToken = req.body.token;
+
+        if (!Expo.isExpoPushToken(pushToken)) {
+            return res.json({error: `Push token ${pushToken} is not a valid Expo push token`});
+        }
+
+        // Construct a message (see https://docs.expo.io/push-notifications/sending-notifications/)
+        messages.push({
+            to: pushToken,
+            sound: 'default',
+            body: 'This is a test notification',
+            data: {withSome: 'data'},
+        });
+
+        let chunks = expo.chunkPushNotifications(messages);
+        let tickets = [];
+        setTimeout(async () => {
+
+            for (let chunk of chunks) {
+                try {
+                    let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+                    console.log(ticketChunk);
+                    tickets.push(...ticketChunk);
+                } catch(error) {
+                    return res.json({error: error})
+                }
+            }
+        }, 5000);
+
     }
 }
 
