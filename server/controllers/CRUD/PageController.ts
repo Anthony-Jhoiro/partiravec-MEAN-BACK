@@ -18,6 +18,7 @@ import {imagesController} from './ImagesController';
 import {CustomRequest} from "../../tools/types";
 import {Response} from "express";
 import {requireAuth, requireInBody} from "../../tools/decorators";
+import { RESOURCE_NOT_FOUND, UNAUTHORIZE, SERVER_ERROR } from "../../tools/ErrorTypes";
 
 class PageController {
     /**
@@ -39,11 +40,11 @@ class PageController {
         const book = await Book.findOne({_id: req.params.book});
 
         // Check if the book exists
-        if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND);
 
         // Check if the user has access to the book
         if (!book.hasAccess(currentUser))
-            return res.status(401).json({error: "Vous n'êtes pas autorisé à modifier ce livre."});
+            return res.status(401).send(UNAUTHORIZE);
 
         // Create the page
         const newPage = new Page({
@@ -59,7 +60,7 @@ class PageController {
         });
 
         newPage.save((err, page) => {
-            if (err) return res.status(500).json({error: "Une erreur est survenue pendant l'ajout de la page."});
+            if (err) return res.status(500).send(SERVER_ERROR);
 
             // create shields on images
             page.images.forEach(i => {
@@ -91,11 +92,11 @@ class PageController {
         const page = await Page.findOne({book: req.params.book, _id: req.params.page}).populate('book');
 
         if (!page)
-            return res.status(404).json({error: "La page demandée n'existe pas"});
+            return res.status(404).send(RESOURCE_NOT_FOUND);
 
         // @ts-ignore
         if (!page.book.hasAccess(currentUser))
-            return res.status(401).json("Vous n'avez pas l'autorisation d'accéder à ce livre.");
+            return res.status(401).send(UNAUTHORIZE);
 
         // Update infos and save the page
         page.title = body.title;
@@ -106,7 +107,7 @@ class PageController {
         page.lastAuthor = currentUser;
 
         page.save((err, page) => {
-            if (err) return res.status(500).json({error: "Une erreur est survenue pendant la modification de la page."});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "La page " + page.title + " a bien été modifiée."});
         });
     }
@@ -124,19 +125,16 @@ class PageController {
 
         // Get page
         const page = await Page.findOne({book: req.params.book, _id: req.params.page}).populate('book');
-        if (!page) return res.status(404).json({error: "La page n'existe pas."});
+        if (!page) return res.status(404).send(RESOURCE_NOT_FOUND);
 
         // Check authorisation
         // @ts-ignore
         if ((!page.isMainAuthor(currentUser)) && (!page.book.isMainAuthor(currentUser)))
-            return res.status(401).json({error: "Vous n'êtes pas autorisé à supprimer cette page"});
+            return res.status(401).send(UNAUTHORIZE)
 
         // delete the page
         await Page.deleteOne({_id: req.params.page}, err => {
-            if (err) return res.status(500).json({
-                error: "Une erreur est intervenue pendant la suppression de la page",
-                message: err.error
-            });
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "La page a bien été supprimée"});
         });
     }
@@ -152,8 +150,8 @@ class PageController {
         const currentUser = req.currentUserId;
         // Check authorisation on the book
         const book = await Book.findOne({_id: req.params.book});
-        if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND);
+        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).send(UNAUTHORIZE);
 
         if (req.query.min) {
             const pages = await Page.find({book: book}, {_id: 1, title: 1, location: 1});
@@ -176,10 +174,10 @@ class PageController {
         const currentUser = req.currentUserId;
         // Check authorisation on the book
         const page = await Page.findOne({_id: req.params.page, book: req.params.book}).populate('book');
-        if (!page) return res.status(404).json({error: "La page n'existe pas."});
+        if (!page) return res.status(404).send(RESOURCE_NOT_FOUND);
         // @ts-ignore
         if (!(page.book.hasAccess(currentUser)) && !page.book.public)
-            return res.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+            return res.status(401).send(UNAUTHORIZE);
 
         return res.json(page);
     }
@@ -189,7 +187,7 @@ class PageController {
         // Check authorisation on the book
         const book = await Book.findOne({_id: req.params.book});
         if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).send(UNAUTHORIZE);
 
         const countries = await Page.find({book: book}).distinct("location.country");
 
@@ -201,7 +199,7 @@ class PageController {
         // Check authorisation on the book
         const book = await Book.findOne({_id: req.params.book});
         if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).json({error: "Vous n'avez pas la permission d'accéder au livre"});
+        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).send(UNAUTHORIZE);
 
         const pages = await Page.find({book: req.params.book, 'location.country': req.params.country});
 

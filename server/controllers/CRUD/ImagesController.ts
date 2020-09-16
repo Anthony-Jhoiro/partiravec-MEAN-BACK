@@ -18,6 +18,7 @@ import UploadMiddleware  from "../../middlewares/UploadMiddleware";
 import {Image} from "../../models/Image";
 import {Book} from "../../models/Book";
 import {Request, Response} from "express";
+import { RESOURCE_NOT_FOUND, SERVER_ERROR, UNAUTHORIZE } from "../../tools/ErrorTypes";
 
 const LOCALSTORAGE = "local";
 
@@ -29,7 +30,7 @@ class ImagesController {
     if (IMAGE_STORAGE_MODE === LOCALSTORAGE) {
       const fileUpload = new Resize();
       if (!req.file) {
-        res.status(401).json({ error: 'Aucune image n\'a été trouvée' });
+        res.status(404).send(RESOURCE_NOT_FOUND);
       }
 
       const filename = await fileUpload.save(req.file.buffer);
@@ -38,8 +39,7 @@ class ImagesController {
 
     } else {
       readFile(req.file.path, (err, fileData) => {
-        if (err) return res.status(500).json({ error: "L'image ne peut pas être lue." });
-
+        if (err) return res.status(500).send(SERVER_ERROR);
         const fileName = Date.now() + '.png';
         const putParams = {
           Bucket: 'partiravec',
@@ -48,7 +48,7 @@ class ImagesController {
         };
 
         UploadMiddleware.s3.putObject(putParams, (err, data) => {
-          if (err) return res.status(500).json({ error: err });
+          if (err) return res.status(500).send(SERVER_ERROR);
           return res.json({ name: ENDPOINT + "/api/images/" + fileName });
         });
       });
@@ -68,7 +68,7 @@ class ImagesController {
         // The image is own by a book, get the book
         const book = await Book.findOne({ _id: imageShield.book });
         if (!book.canRead(currentUser)) {
-          return res.status(401).json({error: "Vous n'avez pas accès à cette image"});
+          return res.status(401).send(UNAUTHORIZE);
         }
       }
     }
@@ -82,7 +82,7 @@ class ImagesController {
       };
   
       UploadMiddleware.s3.getObject(getParams, (err, data) => {
-        if (err) return res.status(404).json({ error: "Image introuvable" });
+        if (err) return res.status(404).send(RESOURCE_NOT_FOUND);
         res.writeHead(200, { 'Content-Type': 'image/jpeg' });
         res.write(data.Body, 'binary');
         res.end(null, 'binary');

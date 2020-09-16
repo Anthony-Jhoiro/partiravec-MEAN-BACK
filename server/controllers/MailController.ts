@@ -18,6 +18,7 @@ import {sign} from 'jsonwebtoken';
 import {CustomRequest} from "../tools/types";
 import {Response} from "express";
 import {requireInBody} from "../tools/decorators";
+import { INVALID_LOGIN, SERVER_ERROR } from '../tools/ErrorTypes';
 
 class MailController {
     @requireInBody('login')
@@ -30,7 +31,7 @@ class MailController {
         } else {
             user = await User.findOne({username: req.body.login});
         }
-        if (!user) return res.status(400).json({error: "L'adresse email ou l'identifiant n'existe pas"});
+        if (!user) return res.status(400).send(INVALID_LOGIN)
 
         const code = sign({id: user.id}, JWT_SECRET, {expiresIn: '1h'});
 
@@ -65,7 +66,7 @@ class MailController {
         transporter.sendMail(mailOptions,
             function (error) {
                 if (error) {
-                    return res.status(500).json({error: "envoie du mail impossible"})
+                    return res.status(500).send(SERVER_ERROR);
                 } else {
                     return res.json({success: "email envoyé"})
                 }

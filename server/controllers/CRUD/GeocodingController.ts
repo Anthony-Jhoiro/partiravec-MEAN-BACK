@@ -16,6 +16,7 @@ import * as request from "request";
 import {CustomRequest} from "../../tools/types";
 import {Response} from "express";
 import {requireInQuery} from "../../tools/decorators";
+import { SERVER_ERROR } from "../../tools/ErrorTypes";
 
 class GeocodingController {
 
@@ -27,10 +28,7 @@ class GeocodingController {
         request("https://maps.googleapis.com/maps/api/geocode/json?address=" + encodeURI(req.query.address) + "&key=" + GOOGLE_MAPS_API_KEY,
             (error, response, body) => {
                 const parsedBody = JSON.parse(body);
-                if (error) return res.status(500).json({
-                    error: "Une erreur est survenue pendant la récupération des données",
-                    message: error
-                });
+                if (error) return res.status(500).send(SERVER_ERROR)
                 if (parsedBody.results.length === 0) return null;
 
                 let country;

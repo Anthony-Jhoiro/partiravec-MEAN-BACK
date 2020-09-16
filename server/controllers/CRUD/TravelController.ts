@@ -16,6 +16,7 @@ import {Travel} from '../../models/Travel';
 import {Response} from "express";
 import {CustomRequest} from "../../tools/types";
 import {requireAuth, requireInBody} from "../../tools/decorators";
+import { RESOURCE_NOT_FOUND, SERVER_ERROR, UNAUTHORIZE } from '../../tools/ErrorTypes';
 
 class TravelController {
     /**
@@ -27,10 +28,9 @@ class TravelController {
     async getTravelsFromBook(req: CustomRequest, res: Response) {
         // Get the book & check access
         const book = await Book.findOne({_id: req.params.book});
-        if (!book) return res.status(404).json({error: "Le livre demandé est introuvable"});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND)
 
-        if (!book.canRead(req.currentUserId)) return res.status(401).json({error: "Vous n'avez pas la permission de lire ce livre"});
-
+        if (!book.canRead(req.currentUserId)) return res.status(401).send(UNAUTHORIZE);
         // get tre travels
 
         return res.json(await Travel.find({book: book}));
@@ -50,8 +50,8 @@ class TravelController {
 
         // get book and check access
         const book = await Book.findOne({_id: req.params.book});
-        if (!book) return res.status(404).json({error: "Le livre demandé est introuvable"});
-        if (!book.hasAccess(req.currentUserId)) return res.status(401).json({error: "Vous n'avez pas la permission d'écrire dans ce livre"});
+        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND);
+        if (!book.hasAccess(req.currentUserId)) return res.status(401).send(UNAUTHORIZE);
 
         // Create the travel
         const travel = new Travel({
@@ -60,7 +60,7 @@ class TravelController {
         });
 
         travel.save((err) => {
-            if (err) return res.status(500).json({error: "Impossible de créer le voyage."});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "Le voyage a bien été créé !"});
         });
 
@@ -82,14 +82,14 @@ class TravelController {
 
         // get book and check access
         const travel = await Travel.findOne({_id: req.params.travel, book: req.params.book}).populate('book');
-        if (!travel) return res.status(404).json({error: "Le voyage demandé est introuvable"});
+        if (!travel) return res.status(404).send(RESOURCE_NOT_FOUND);
         // @ts-ignore
-        if (!travel.book.hasAccess(req.currentUserId)) return res.status(401).json({error: "Vous n'avez pas la permission d'écrire dans ce livre"});
+        if (!travel.book.hasAccess(req.currentUserId)) return res.status(401).send(UNAUTHORIZE);
 
         travel.steps = req.body.steps;
 
         travel.save((err) => {
-            if (err) return res.status(500).json({error: "Impossible de modifier le voyage."});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "Le voyage a bien été modifié !"});
         });
     }
