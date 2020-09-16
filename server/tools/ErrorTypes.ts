@@ -10,4 +10,5 @@ export const USER_NOT_FOUND = "USER_NOT_FOUND";
 export const UNAUTHORIZE = "UNAUTHORIZE";
 export const USELESS = "USELESS";
 export const NO_PRIVILEGE = "NO_PRIVILEGE";
-export const LOGIN_NEEDED = "LOGIN_NEEDED"
+export const LOGIN_NEEDED = "LOGIN_NEEDED";
+export const INVALID_VALUE = "INVALID_VALUE";

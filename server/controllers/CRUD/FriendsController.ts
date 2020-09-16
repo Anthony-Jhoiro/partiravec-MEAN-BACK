@@ -19,7 +19,8 @@ import {Inbox} from '../../models/Inbox';
 import {Group} from '../../models/Group';
 import {notificationController} from '../NotificationController';
 import {FriendRequest} from '../../models/FriendRequest';
-import {requireAuth} from "../../tools/decorators";
+import {requireAuth, requireInBody, requireInQuery} from "../../tools/decorators";
+import {INVALID_VALUE, RESOURCE_NOT_FOUND, SERVER_ERROR, UNAUTHORIZE, USELESS, USER_NOT_FOUND} from '../../tools/ErrorTypes';
 
 class FriendsController {
 
@@ -30,43 +31,48 @@ class FriendsController {
      * @bodyParam user string the user to add
      * @return {Promise<void>}
      */
+    @requireAuth()
+    @requireInBody('user')
     async addFriend(req: CustomRequest, res: Response) {
         // Get current user
         const currentUser = await User.findOne({_id: req.currentUserId});
-        const userToAdd = req.body.user
+        const userToAdd = req.body.user;
 
         if (userToAdd === req.currentUserId)
-            return res.status(400).json({error: "Vous ne pouvez pas vous ajouter comme ami."});
+            return res.status(400).send(INVALID_VALUE)
 
         if (currentUser.friends.indexOf(userToAdd) !== -1)
-            return res.status(400).json({error: "Vous êtes déjà amis"});
-
+            return res.status(400).send(USELESS);
         currentUser.friends.push(userToAdd);
         currentUser.save(err => {
-            if (err) return res.status(500).json({error: "Il semble que vous ne puissiez pas  être ami avec cet utilisateur"});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "Vous êtes maintenant amis !"});
         });
     }
 
     /**
      * Remove a user from the current user friends
+     * TODO : remove friend for the other user too
      * @param req
      * @param res
      * @queryParam user string id of the user to add
      * @return {Promise<*>}
      */
+    @requireAuth()
+    @requireInBody('user')
     async removeFriend(req: CustomRequest, res: Response) {
         // Get current user
         const currentUser = await User.findOne({_id: req.currentUserId});
         const userToAdd = req.body.user;
 
+        // check users are friends
         const userIndex = currentUser.friends.indexOf(userToAdd)
         if (userIndex === -1)
-            return res.status(400).json({error: "Vous n'êtes pas amis"});
+            return res.status(400).send(INVALID_VALUE)
 
         currentUser.friends.splice(userIndex, 1);
         currentUser.save(err => {
-            if (err) return res.status(500).json({error: "Il semble que vous soyez inséparables"});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "Vous n'êtes plus amis !"});
         });
     }
@@ -91,13 +97,14 @@ class FriendsController {
      * @param res
      * @return {Promise<*>}
      */
+    @requireAuth()
     async getRoom(req: CustomRequest, res: Response) {
         const currentUser = req.currentUserId;
         const _group = await Group.findOne({
             _id: req.params.room,
             contributors: currentUser
         }).populate('contributors', 'username');
-        if (!_group) return res.status(404).json({error: "Le groupe demandé n'existe pas."});
+        if (!_group) return res.status(404).send(RESOURCE_NOT_FOUND)
 
         const group: any = {
             name: _group.name,
@@ -125,20 +132,21 @@ class FriendsController {
      * @queryParam friend id of the friend
      * @return {Promise<*>}
      */
+    @requireAuth()
+    @requireInQuery('friend')
     async getRoomFromFriend(req: CustomRequest, res: Response) {
-        if (!req.query.friend) return res.status(400);
         const friendId = req.query.friend;
 
         const currentUserId = req.currentUserId;
         const friend = await User.find({_id: friendId});
 
-        if (!friend) return res.status(404).json({error: "L'utilisateur n'existe pas"});
+        if (!friend) return res.status(404).send(USER_NOT_FOUND);
 
 
         const group = await Group.findOne({contributors: {$all: [friendId, currentUserId]}, type: 'FRIEND'});
 
         if (!group) {
-            return res.status(500).json({error: "Groupe de discussion introuvable"});
+            return res.status(500).send(RESOURCE_NOT_FOUND);
         } else {
             return res.json({group: group});
         }
@@ -153,17 +161,21 @@ class FriendsController {
      * @bodyParam users string[] users ids
      * @bodyParam name string name of the group
      */
+    @requireAuth()
+    @requireInBody('users', 'name')
     createRoom(req: CustomRequest, res: Response) {
+        // Create a Set containing all of the users and then convert it to array
         let userSet = new Set(req.body.users);
         userSet.add(req.currentUserId);
         const users = Array.from(userSet);
+
         const group = new Group({
             name: req.body.name,
             contributors: users
         });
 
         group.save(err => {
-            if (err) return res.json({error: "Le groupe n'a pas pu être créé"});
+            if (err) return res.status(500).send(SERVER_ERROR)
             return res.json({success: "Le groupe a bien été créé"});
         });
     }
@@ -174,27 +186,36 @@ class FriendsController {
      * @param res
      * @return {Promise<*>}
      */
+    @requireAuth()
+    @requireInBody('room', 'user')
     async inviteToRoom(req: CustomRequest, res: Response) {
-        const currentUser = req.currentUserId;
+        const currentUserId = req.currentUserId;
+        const otherUserId = req.body.user
         const room = await Group.findOne(req.body.room);
 
-        if (!room.hasAccess(currentUser))
-            return res.status(401).json({error: "Vous ne pouvez pas ajouter d'utilisateur à ce groupe"});
+        // Check if the user can do the action
+        if (!room.hasAccess(currentUserId))
+            return res.status(401).send(UNAUTHORIZE);
 
-        if (!(room.hasAccess(req.body.user) || req.body.user === currentUser))
-            return res.status(401).json({error: "L'utilisateur fait déjà parti du groupe"});
+        if (!(room.hasAccess(otherUserId) || otherUserId === currentUserId))
+            return res.status(401).send(USELESS);
 
-        room.contributors.push(req.body.user);
+        room.contributors.push(otherUserId);
 
         room.save(err => {
-            if (err) return res.status(400).json({error: "Impossible d'ajouter l'utilisateur au groupe."});
+            if (err) return res.status(500).send(SERVER_ERROR);
             return res.json({success: "L'utilisateur a bien été ajouté au groupe."});
         });
     }
 
+    /**
+     * Create a friend request
+     * @param req
+     * @param res 
+     */
+    @requireAuth()
+    @requireInBody('friend')
     async createFriendRequest(req: CustomRequest, res: Response) {
-        // Check request
-        if (!req.body.friend) return res.status(400);
 
         const currentUserId = req.currentUserId;
         const newFriendId = req.body.friend;
@@ -203,7 +224,7 @@ class FriendsController {
         const currentUser = await User.findOne({_id: currentUserId});
 
         if (currentUser.friends.indexOf(newFriendId) !== -1)
-            return res.status(400).json({error: "Vous êtes déjà amis."});
+            return res.status(400).send(USELESS);
 
         // Check for previous friends request
         const previousRequest = await FriendRequest.findOne({
@@ -215,7 +236,7 @@ class FriendsController {
             }, {from: newFriendId, to: currentUserId}]
         });
 
-        if (previousRequest) return res.status(400).json({error: "Une demande d'ami a déjà été envoyée"});
+        if (previousRequest) return res.status(400).send(USELESS);
 
         // Create the request
         const request = new FriendRequest({
@@ -224,7 +245,7 @@ class FriendsController {
         });
 
         request.save((err, request) => {
-            if (err) return res.status(500).json({error: "Envoie de la requete impossible."});
+            if (err) return res.status(500).send(SERVER_ERROR);
             const friendSocket = notificationController.getSocketFromUserId(newFriendId);
 
             if (friendSocket) {
@@ -236,6 +257,12 @@ class FriendsController {
 
     }
 
+    /**
+     * Get friends request sended to the current user
+     * @param req 
+     * @param res 
+     */
+    @requireAuth()
     async getFriendRequests(req: CustomRequest, res: Response) {
         const currentUser = req.currentUserId;
 
@@ -254,11 +281,11 @@ class FriendsController {
      * @param res
      * @return {Promise<*>}
      */
+    @requireAuth()
+    @requireInBody('friendRequest')
     async acceptFriendRequest(req: CustomRequest, res: Response) {
         const currentUserId = req.currentUserId;
         const friendRequestId = req.body.friendRequest;
-
-        if (!friendRequestId) return res.status(400);
 
         const friendRequest = await FriendRequest.findOne({
             _id: friendRequestId,
@@ -266,16 +293,16 @@ class FriendsController {
             to: currentUserId
         }).populate('from').populate('to');
 
-        if (!friendRequest) return res.status(404).json({error: "Demande d'ami introuvable."});
+        if (!friendRequest) return res.status(404).send(RESOURCE_NOT_FOUND)
 
         // add to friend list
         friendRequest.to.friends.push(friendRequest.from._id);
         friendRequest.from.friends.push(currentUserId);
 
         friendRequest.to.save((err, to) => {
-            if (err) return res.status(500).json({error: "Impossible de mettre à jour la liste d'ami"});
+            if (err) return res.status(500).send(SERVER_ERROR);
             friendRequest.from.save((err, from) => {
-                if (err) return res.status(500).json({error: "Impossible de mettre à jour la liste d'ami"});
+                if (err) return res.status(500).send(SERVER_ERROR);
 
                 // Create the room
                 const room = new Group({
@@ -287,9 +314,9 @@ class FriendsController {
 
                 // Delete the friend request
                 FriendRequest.deleteOne({_id: friendRequest._id}, err => {
-                    if (err) return res.status(500).json({error: "Impossible de supprimer la demande d'ami"});
+                    if (err) return res.status(500).send(SERVER_ERROR);
                     room.save((err, room) => {
-                        if (err) return res.status(500).json({error: "Impossible de créer le groupe de discussion"});
+                        if (err) return res.status(500).send(SERVER_ERROR);
 
                         // Make both users listen to that room
                         const currentUserSocket = notificationController.getSocketFromUserId(currentUserId);
