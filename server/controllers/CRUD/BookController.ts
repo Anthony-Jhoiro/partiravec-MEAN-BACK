@@ -15,15 +15,17 @@ import {Book} from "../../models/Book";
 import {User} from "../../models/User";
 import {imagesController} from './ImagesController';
 import {ENDPOINT} from '../../tools/environment';
-import {Request, Response} from "express";
+import {Response} from "express";
 import {requireAuth, requireInBody} from "../../tools/decorators";
 import {CustomRequest} from "../../tools/types";
-import { SERVER_ERROR, RESOURCE_NOT_FOUND, UNAUTHORIZE, USER_NOT_FOUND, USELESS, NO_PRIVILEGE, LOGIN_NEEDED } from "../../tools/ErrorTypes";
+import { SERVER_ERROR, RESOURCE_NOT_FOUND, UNAUTHORIZE, LOGIN_NEEDED } from "../../tools/ErrorTypes";
 
 class BookController {
 
     /**
      * Create a book
+     * * 200 - book has been created
+     * * 500 - error creating the book
      * @param req
      * @param res
      * @bodyParam title string
@@ -49,12 +51,15 @@ class BookController {
             if (book.coverImage.includes(ENDPOINT))
                 imagesController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
 
-            return res.json({success: 'Le livre ' + book.title + ' a bien été créé !'});
+            return res.json(book);
         });
     }
 
     /**
      * Update a book
+     * * 200 - book has been updated
+     * * 404 - book not found
+     * * 401 - user has no access to modify the book
      * @param req
      * @param res
      * @bodyParam title string
@@ -87,7 +92,7 @@ class BookController {
                     if (book.coverImage.includes(ENDPOINT))
                         imagesController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
 
-                    return res.json({success: 'Le livre ' + book.title + ' a bien été modifié !'});
+                    return res.json(book);
                 });
             });
     }
@@ -115,12 +120,13 @@ class BookController {
 
         Book.deleteOne({_id: bookId}, err => {
             if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json({success: "Le livre a bien été supprimé"});
+            return res.json(book);
         });
     }
 
-    /**: Response
-     * get Public Books
+    /**
+     * get Public Books :
+     * * 200 - fetch succeed
      * @param req
      * @param res
      * @return {Promise<void>}
@@ -152,6 +158,7 @@ class BookController {
 
     /**
      * Return the books where the user is a contributor
+     * * 200 - fetch succeed
      * @param req
      * @param res
      * @return {Promise<*>}
@@ -180,6 +187,10 @@ class BookController {
 
     /**
      * Get a book by its id
+     * * 200 - fetch succeed
+     * * 404 - book not found
+     * * 403 - user need to be log to see the book
+     * * 401 - user is not authorize to see the book
      * @param req
      * @param res
      * @return {Promise<*>}

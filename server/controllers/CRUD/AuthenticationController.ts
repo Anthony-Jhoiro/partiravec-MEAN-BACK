@@ -17,7 +17,7 @@ import {addJwtToken} from "../../tools/jwtAdder";
 import {jwtVerify} from "../../tools/jwtVerify";
 import {Request, Response} from "express";
 import {requireInBody} from "../../tools/decorators";
-import { INVALID_LOGIN, INVALID_PASSWORD, USERNAME_TAKEN, EMAIL_TAKEN, SERVER_ERROR } from '../../tools/ErrorTypes';
+import { INVALID_LOGIN, INVALID_PASSWORD, USERNAME_TAKEN, EMAIL_TAKEN, SERVER_ERROR, INVALID_VALUE } from '../../tools/ErrorTypes';
 
 /**
  * Username Regex :
@@ -53,7 +53,6 @@ class AuthenticationController {
             addJwtToken(res, {id: optionalUser._id}, longDuration);
 
             return res.json({
-                success: "Vous êtes connecté !",
                 data: {
                     user: {
                         username: optionalUser.username,
@@ -139,7 +138,6 @@ class AuthenticationController {
 
                             addJwtToken(res, {id: user._id});
                             return res.json({
-                                success: "Votre compte a bien été créé !",
                                 data: {
                                     user: {
                                         username: user.username,
@@ -156,21 +154,35 @@ class AuthenticationController {
 
     }
 
+    /**
+     * Check the password recieve link :
+     * * 200 - link is valid
+     * * 400 - linnk is invalid
+     * @param req 
+     * @param res 
+     */
     checkPasswordReceiveLink(req: Request, res: Response) {
         const token = req.params.token;
 
         jwtVerify(token, () => {
-            return res.json({success: "Le lien est valide"});
+            return res.json({success: "success"});
         }, () => {
-            return res.json({error: "Le lien est invalide"});
+            return res.status(400).send(INVALID_VALUE);
         });
     }
 
+    /**
+     * Renew the password
+     * * 200 - password has been change
+     * * 400 - token is expire
+     * @param req 
+     * @param res 
+     */
     @requireInBody('token', 'password')
     async renewPassword(req: Request, res: Response) {
         const token = req.body.token;
 
-        jwtVerify(token, (decoded) => {
+        jwtVerify(token, (decoded: any) => {
 
             User.findOne({_id: decoded.id})
                 .then((user: UserDocument) => {
@@ -179,13 +191,13 @@ class AuthenticationController {
                     hash.update(req.body.password);
                     user.password = hash.digest('hex');
                     user.save((err) => {
-                        if (err) return res.status(500).json({error: "Votre mot de passe n'a pas pu être modifié"});
-                        return res.json({success: "Votre mot de passe a bien été mis à jour"});
+                        if (err) return res.status(500).send(SERVER_ERROR);
+                        return res.json({success: "success"});
                     });
                 });
 
         }, () => {
-            return res.json({error: "Le lien est invalide, le délai de 1h a été écoulé."});
+            return res.status(400).send(INVALID_VALUE);
         });
     }
 }
