@@ -76,10 +76,10 @@ class UserController {
             user.devices.push(deviceId);
             
             user.save((err, u)=> {
-                return res.json({message: 'L\'apareil a bien été enregistré'});
+                return res.json({success: 'device saved'});
             })
         }
-        return res.json({message: 'L\'appareil était déjà enregistré'});
+        return res.json({success: 'device already saved'});
     }
 }
 

@@ -26,6 +26,7 @@ class FriendsController {
 
     /**
      * Add a user to the current user friends if he isn't one already and if he is not the current user
+     * TODO : add friend for the other user too
      * @param req
      * @param res
      * @bodyParam user string the user to add
@@ -174,9 +175,9 @@ class FriendsController {
             contributors: users
         });
 
-        group.save(err => {
+        group.save((err, group) => {
             if (err) return res.status(500).send(SERVER_ERROR)
-            return res.json({success: "Le groupe a bien été créé"});
+            return res.json(group);
         });
     }
 
@@ -202,9 +203,9 @@ class FriendsController {
 
         room.contributors.push(otherUserId);
 
-        room.save(err => {
+        room.save((err, group) => {
             if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json({success: "L'utilisateur a bien été ajouté au groupe."});
+            return res.json(group);
         });
     }
 
@@ -252,7 +253,7 @@ class FriendsController {
                 friendSocket.socket.emit('friend-request', request.populate('from', 'username'));
             }
 
-            return res.json({success: "La demande d'ami a bien été envoyée !"})
+            return res.json(request)
         })
 
     }

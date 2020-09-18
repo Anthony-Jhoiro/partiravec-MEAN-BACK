@@ -67,7 +67,7 @@ class PageController {
                 if (i.includes(ENDPOINT))
                     imagesController.createImageShield(i.split('/').pop(), 'book', page.book);
             })
-            return res.json({success: "La page " + page.title + " a bien été créée."});
+            return res.json(page);
         });
     }
 
@@ -108,7 +108,7 @@ class PageController {
 
         page.save((err, page) => {
             if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json({success: "La page " + page.title + " a bien été modifiée."});
+            return res.json(page);
         });
     }
 

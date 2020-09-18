@@ -88,9 +88,9 @@ class TravelController {
 
         travel.steps = req.body.steps;
 
-        travel.save((err) => {
+        travel.save((err, travel) => {
             if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json({success: "Le voyage a bien été modifié !"});
+            return res.json(travel);
         });
     }
 
