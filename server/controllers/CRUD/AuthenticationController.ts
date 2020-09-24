@@ -32,6 +32,9 @@ class AuthenticationController {
 
     /**
      * Log a user with given credentials
+     * * 401 - invalid password
+     * * 400 - invalid login
+     * * 200 - succesfully login
      * @param req
      * @param res
      * @return Response
@@ -85,6 +88,9 @@ class AuthenticationController {
 
     /**
      * Register a user
+     * * 400 - invalid username / email taken / username taken
+     * * 500 - server error
+     * * 200 - account created
      * @param req
      * @param res
      * @return {*|Promise<any>}
