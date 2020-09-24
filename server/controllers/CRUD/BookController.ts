@@ -212,6 +212,7 @@ class BookController {
             coverImage: optionalBook.coverImage,
             created: optionalBook.created,
             updated: optionalBook.updated,
+            public: optionalBook.public,
             access: (req.currentUserId) ? optionalBook.hasAccess(req.currentUserId) : false
         };
 

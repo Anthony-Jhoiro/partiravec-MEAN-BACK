@@ -24,12 +24,12 @@ class GeocodingController {
     @requireInQuery('address')
     getLocationFromAddress(req: CustomRequest, res: Response) {
 
-        if (!(typeof req.query.address === 'string')) return;
+        if (!(typeof req.query.address === 'string')) return res.status(400);
         request("https://maps.googleapis.com/maps/api/geocode/json?address=" + encodeURI(req.query.address) + "&key=" + GOOGLE_MAPS_API_KEY,
             (error, response, body) => {
                 const parsedBody = JSON.parse(body);
                 if (error) return res.status(500).send(SERVER_ERROR)
-                if (parsedBody.results.length === 0) return null;
+                if (parsedBody.results.length === 0) return res.json({error: "no location found"});;
 
                 let country;
                 // Get country
@@ -40,7 +40,7 @@ class GeocodingController {
                     }
                 }
 
-                if (!country) return null;
+                if (!country) return res.json({error: "no location found"});
 
                 return res.json({
                     label: req.query.address,
