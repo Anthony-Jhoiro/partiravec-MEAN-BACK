@@ -25,6 +25,7 @@ import {friendsController} from './controllers/CRUD/FriendsController';
 import {mailController} from './controllers/MailController';
 import {travelController} from './controllers/CRUD/TravelController';
 import {adminController} from './controllers/CRUD/AdminController';
+import FavoriteController from './controllers/CRUD/FavoriteController';
 
 
 export const loadRoutes = app => {
@@ -43,6 +44,8 @@ export const loadRoutes = app => {
     app.delete('/api/book/:id', bookController.deleteBook);
     app.post('/api/book/access/add', bookContributorsController.addAccessBook);
     app.post('/api/book/access/remove', bookContributorsController.removeAccessBook);
+    app.get('/api/book/favorite', FavoriteController.getFavoriteBooks);
+    app.post('/api/book/favorite', FavoriteController.toggleFavoriteBook);
     app.get('/api/book', bookController.getBooksWhereUserIsAContributor);
     app.get('/api/book/public', bookController.getPublicBooks);
     app.get('/api/book/:id', bookController.getBookById);

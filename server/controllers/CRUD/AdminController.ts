@@ -57,7 +57,7 @@ class AdminController {
 
         // create the images
         Image.create(images, err => {
-            if (err) return res.status(500).send(SERVER_ERROR);
+            if (err) return res.status(500).json({error:SERVER_ERROR});
             return res.json({success: `done ${images.length} items`});
         });
     }

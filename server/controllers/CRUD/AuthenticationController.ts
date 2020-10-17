@@ -49,7 +49,7 @@ class AuthenticationController {
             const hash = crypto.createHash('sha512', optionalUser.salt);
             hash.update(body.password);
             if (hash.digest('hex') !== optionalUser.password)
-                return res.status(401).send(INVALID_PASSWORD)
+                return res.status(401).json({error: INVALID_PASSWORD})
 
             const longDuration = (body.longDuration) ? body.longDuration : false;
 
@@ -70,7 +70,7 @@ class AuthenticationController {
             // Authentication with email
             User.findOne({email: body.login})
                 .then(optionalUser => {
-                    if (!optionalUser) return res.status(400).send(INVALID_LOGIN)
+                    if (!optionalUser) return res.status(400).json({error: INVALID_LOGIN})
 
                     return doLogin(optionalUser);
                 });
@@ -79,7 +79,7 @@ class AuthenticationController {
             // Authentication with password
             User.findOne({username: body.login})
                 .then(optionalUser => {
-                    if (!optionalUser) return res.status(400).send(INVALID_LOGIN)
+                    if (!optionalUser) return res.status(400).json({error: INVALID_LOGIN})
 
                     return doLogin(optionalUser);
                 });
@@ -103,18 +103,18 @@ class AuthenticationController {
         const body = req.body;
 
         if (!loginRegex.test(body.username)) {
-            return res.status(400).send(INVALID_LOGIN)
+            return res.status(400).json({error: INVALID_LOGIN})
         }
 
         // Check email unique
         User.findOne({username: body.username})
             .then(optionalUser => {
-                if (optionalUser) return res.status(400).send(USERNAME_TAKEN)
+                if (optionalUser) return res.status(400).json({error: USERNAME_TAKEN})
 
                 // check username unique
                 User.findOne({email: body.email})
                     .then(optionalUser => {
-                        if (optionalUser) return res.status(400).send(EMAIL_TAKEN)
+                        if (optionalUser) return res.status(400).json({error: EMAIL_TAKEN})
 
                         // set salt and hash password
                         const salt = crypto
@@ -139,7 +139,7 @@ class AuthenticationController {
 
                         user.save((err, user: UserDocument) => {
                             if (err) {
-                                return res.status(500).send(SERVER_ERROR)
+                                return res.status(500).json({error: SERVER_ERROR})
                             }
 
                             addJwtToken(res, {id: user._id});
@@ -173,7 +173,7 @@ class AuthenticationController {
         jwtVerify(token, () => {
             return res.json({success: "success"});
         }, () => {
-            return res.status(400).send(INVALID_VALUE);
+            return res.status(400).json({error: INVALID_VALUE});
         });
     }
 
@@ -197,13 +197,13 @@ class AuthenticationController {
                     hash.update(req.body.password);
                     user.password = hash.digest('hex');
                     user.save((err) => {
-                        if (err) return res.status(500).send(SERVER_ERROR);
+                        if (err) return res.status(500).json({SERVER_ERROR});
                         return res.json({success: "success"});
                     });
                 });
 
         }, () => {
-            return res.status(400).send(INVALID_VALUE);
+            return res.status(400).json({error: INVALID_VALUE});
         });
     }
 }

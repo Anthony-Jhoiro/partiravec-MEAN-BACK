@@ -12,6 +12,8 @@
  */
 
 import {Schema, model, Document} from 'mongoose';
+import { Badge } from '../tools/types';
+import { BookDocument } from './Book';
 
 export type UserDocument = Document & {
     username: string,
@@ -24,6 +26,8 @@ export type UserDocument = Document & {
     friends: Array<string | UserDocument>;
     updated: Date;
     devices: Array<string>;
+    badges: Array<Badge>;
+    favorites: Array<any>
 };
 
 const userSchema = new Schema({
@@ -41,6 +45,15 @@ const userSchema = new Schema({
     }],
     devices: [{
         type: String,
+        default: []
+    }],
+    badges: [{
+        type: Schema.Types.Mixed, // TODO : Better typing
+        default: []
+    }],
+    favorites: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Book',
         default: []
     }],
     updated: {type: Date, default: Date.now}

@@ -16,3 +16,9 @@ import {Request} from "express";
 export type ID = string;
 
 export type CustomRequest = Request & {currentUserId: ID};
+
+export interface Badge {
+    name: string;
+    maxValue?: number;
+    value?: number;
+}

@@ -17,8 +17,9 @@ import {imagesController} from './ImagesController';
 import {ENDPOINT} from '../../tools/environment';
 import {Response} from "express";
 import {requireAuth, requireInBody} from "../../tools/decorators";
-import {CustomRequest} from "../../tools/types";
+import {CustomRequest, ID} from "../../tools/types";
 import { SERVER_ERROR, RESOURCE_NOT_FOUND, UNAUTHORIZE, LOGIN_NEEDED } from "../../tools/ErrorTypes";
+import favoriteController from "./FavoriteController";
 
 class BookController {
 
@@ -139,7 +140,7 @@ class BookController {
             .sort({updated: -1})
             .populate('mainAuthor', 'username');
 
-        const booksToSend = books.map(book => {
+        const booksToSend = await Promise.all(books.map(async book => {
             return {
                 public: book.public,
                 _id: book._id,
@@ -148,9 +149,11 @@ class BookController {
                 mainAuthor: book.mainAuthor,
                 created: book.created,
                 updated: book.updated,
-                access: (req.currentUserId) ? book.hasAccess(req.currentUserId) : false
+                access: (req.currentUserId) ? book.hasAccess(req.currentUserId) : false,
+                favorite: (req.currentUserId) ? await favoriteController.isMarkedAsFavorite(book._id, req.currentUserId) : false,
+                nbFavorites: await getFavoriteCount(book._id)
             }
-        });
+        }));
 
 
         return res.json(booksToSend);
@@ -170,7 +173,7 @@ class BookController {
             .sort({updated: -1})
             .populate('mainAuthor', 'username');
 
-        const booksToSend = books.map(book => {
+        const booksToSend = await Promise.all(books.map(async book => {
             return {
                 public: book.public,
                 _id: book._id,
@@ -179,9 +182,11 @@ class BookController {
                 mainAuthor: book.mainAuthor,
                 created: book.created,
                 updated: book.updated,
-                access: true
+                access: true,
+                favorite: await favoriteController.isMarkedAsFavorite(book._id, req.currentUserId),
+                nbFavorites: await getFavoriteCount(book._id)
             }
-        });
+        }));
         return res.json(booksToSend);
     }
 
@@ -213,7 +218,9 @@ class BookController {
             created: optionalBook.created,
             updated: optionalBook.updated,
             public: optionalBook.public,
-            access: (req.currentUserId) ? optionalBook.hasAccess(req.currentUserId) : false
+            access: (req.currentUserId) ? optionalBook.hasAccess(req.currentUserId) : false,
+            favorite: (req.currentUserId) ? await favoriteController.isMarkedAsFavorite(optionalBook._id, req.currentUserId) : false,
+            nbFavorites: await getFavoriteCount(optionalBook._id)
         };
 
         //Add the list of contributors
@@ -236,6 +243,12 @@ class BookController {
         return res.json(book);
 
     }
+
+    
+}
+
+async function getFavoriteCount (bookId: ID)  {
+    return await User.countDocuments({favorites: bookId});
 }
 
 export const bookController = new BookController();
