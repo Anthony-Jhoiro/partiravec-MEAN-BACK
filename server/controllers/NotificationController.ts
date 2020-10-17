@@ -36,7 +36,6 @@ class NotificationController {
 
   async sendNotificationTo(userId: ID, body: string, data: any = {}) {
     const user = await User.findOne({ _id: userId });
-    console.group("hey")
     const expo = new Expo();
 
     const messages = [];

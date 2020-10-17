@@ -15,6 +15,8 @@ import {jwtVerify} from '../tools/jwtVerify';
 import {Inbox} from '../models/Inbox';
 import {Group} from '../models/Group';
 import {Socket} from "socket.io"
+import { notificationController } from './NotificationController';
+import { User } from '../models/User';
 
 export class ConnectedUser {
     userInfos: {
@@ -72,6 +74,15 @@ export class ConnectedUser {
                 message.save((err, message) => {
                     if (err) return this.socket.emit('error', "Impossible d'envoyer le message");
                     this.socket.broadcast.to(data.room).emit('message', {message, group});
+                    User.findById(this.userInfos.userId, (err, user) => {
+                        const notificationText = user.username + " : " + data.message
+                        group.contributors.forEach(c => {
+                            // @ts-ignore
+                            notificationController.sendNotificationTo(c, notificationText, {message, roomId: group._id, type: 'message'})
+                            
+                        })
+                    })
+                    
                     next(message);
                 })
             });
