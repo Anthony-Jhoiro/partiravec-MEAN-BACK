@@ -72,6 +72,4 @@ export async function getUserById(uid: ID, options: { password: boolean, badges:
 
     return response;
 
-    
-
 }
