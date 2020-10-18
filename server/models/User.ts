@@ -17,6 +17,7 @@ import { BookDocument } from './Book';
 
 export type UserDocument = Document & {
     username: string,
+    displayedName: string,
     salt: string,
     password: string,
     email: string,
@@ -32,6 +33,7 @@ export type UserDocument = Document & {
 
 const userSchema = new Schema({
     username: String,
+    displayedName: String,
     salt: String,
     password: String,
     email: String,
