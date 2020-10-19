@@ -1,0 +1,116 @@
+@startuml MCD
+
+!define table(x) class x <<table>><< (T,#FFAAAA) >>
+!define link(x) class x <<link>><< (L,#AAAAFF) >>
+!define primary_key(x) <color #0077ff><u>* x</u>
+!define foreign_key(x) <color #ff7700><u># x</u>
+!define link_key(x) <color #76826c><u># x</u>
+hide methods
+hide stereotypes
+
+skinparam class {
+    BackgroundColor<<link>> #cdf3f7
+    BackgroundColor<<table>> LightYellow
+}
+
+package "Book & pages"  {
+    table(Book) {
+        primary_key(id)
+        foreign_key(mainAuthor)
+        foreign_key(coverImage)
+        _title
+        public
+        create_at
+        update_at
+    }
+    table(Page) {
+        primary_key(id)
+        foreign_key(book)
+        foreign_key(mainAuthor)
+        _title
+        content
+        location_lat
+        location_lng
+        location_label
+        location_country
+    }
+}
+
+package "Chat" {
+    table(Room) {
+        primary_key(id)
+        name
+    }
+
+    table(Message) {
+        primary_key(id)
+        foreign_key(author)
+        foreign_key(room)
+        message
+    }
+
+    table(Devices) {
+        deviceId
+        foreign_key(userId)
+    }
+}
+
+table(Image) {
+    primary_key(id)
+    url
+    foreign_key(protectedBy)
+}
+
+table(User) {
+    primary_key(id)
+    foreign_key(profilePicture)
+    username
+    email
+    password
+    salt
+}
+
+
+link(Member) {
+    link_key(user)
+    link_key(room)
+}
+
+link(Contributor) {
+    link_key(user)
+    link_key(book)
+}
+
+link(HasImages) {
+    link_key(page)
+    link_key(image)
+}
+
+link(Favorites) {
+    link_key(user)
+    link_key(book)
+}
+
+
+User::profilePicture --> Image
+Message::room --> Room
+Page::book --> Book
+Book::mainAuthor --> User
+Book::coverImage --> Image
+Page::mainAuthor --> User
+Member::user --> User
+Member::room --> Room
+Message::author --> User
+HasImages::page --> Page
+HasImages::image --> Image
+Contributor::user --> User
+Contributor::book --> Book
+Image::protectedBy --> Book
+Favorites::user --> User
+Favorites::book --> Book
+Devices::userId --> User
+
+
+
+
+@enduml
