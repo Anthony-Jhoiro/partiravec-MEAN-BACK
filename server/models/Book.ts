@@ -64,5 +64,6 @@ bookSchema.methods.updateTimeStamp = function () {
     this.updated = Date.now();
 }
 
-export const Book = model<BookDocument>('Book', bookSchema, 'books');
+bookSchema.index({title: 'text'});
 
+export const Book = model<BookDocument>('Book', bookSchema, 'books');

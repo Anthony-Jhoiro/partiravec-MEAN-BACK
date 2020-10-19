@@ -16,6 +16,16 @@ export interface UserInterface {
     devices?: Array<string>;
 }
 
+export function userDocumentToUserInterface(userDocument: UserDocument | string): UserInterface {
+    if (typeof userDocument === 'string') return null;
+    return {
+        _id: userDocument._id,
+        username: userDocument.username,
+        displayedName: userDocument.displayedName,
+        profilePicture: userDocument.profilePicture
+    }
+}
+
 
 export async function getUserById(uid: ID, options: { password: boolean, badges: boolean, friends: boolean, fovoriteBooks: boolean, devices: boolean, email: boolean }) {
 
