@@ -202,7 +202,7 @@ describe("Test the book controller", () => {
                     .set(REQUEST_TOKEN_HEADER, user.token)
                     .send({book: book._id, user: book.mainAuthor._id});
 
-                expect(response.statusCode).toBe(400);
+                expect(response.statusCode).toBe(401);
 
                 done();
             });

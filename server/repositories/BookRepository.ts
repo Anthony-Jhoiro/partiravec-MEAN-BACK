@@ -89,8 +89,8 @@ export async function updateBook(
 ): Promise<BookInterface> {
   const bookToUpdate = await Book.findById(_id);
 
-  if (!bookToUpdate) throw new Error(RESOURCE_NOT_FOUND);
-  if (bookToUpdate.hasAccess(currentUser)) throw new Error(UNAUTHORIZE);
+  if (!bookToUpdate) throw Error(RESOURCE_NOT_FOUND);
+  if (!bookToUpdate.hasAccess(currentUser)) throw Error(UNAUTHORIZE);
 
   bookToUpdate.title = title;
   bookToUpdate.coverImage = coverImage;
@@ -101,7 +101,8 @@ export async function updateBook(
 
   try {
     return bookDocumentToBookInterface(await bookToUpdate.save());
-  } catch {
+  } catch (e) {
+    console.log(e)
     throw new Error(SERVER_ERROR);
   }
 }
@@ -142,7 +143,7 @@ export async function getBookById(
     public: populatedBook.public,
     mainAuthor: userDocumentToUserInterface(populatedBook.mainAuthor),
     access: userHasAccess,
-    favorite: await isUserFavorite(currentUser, populatedBook._id),
+    favorite: currentUser ? await isUserFavorite(currentUser, populatedBook._id) : false,
     nbFavorite: await getFavoriteCount(populatedBook._id)
   };
   if (options.contributors) {
@@ -168,7 +169,7 @@ export async function getBooks(
   pageSize: number = 10,
   pageNum: number = 0,
   uid?: ID,
-  options?: { userIsAContributor?: ID; searchString?: string }
+  options?: { userIsAContributor?: boolean; searchString?: string }
 ) {
   const filters: any = {};
 
@@ -195,10 +196,10 @@ export async function getBooks(
       title: book.title,
       coverImage: book.coverImage,
       mainAuthor: userDocumentToUserInterface(book.mainAuthor),
-      access: options.userIsAContributor
-        ? book.hasAccess(options.userIsAContributor)
+      access: uid
+        ? book.hasAccess(uid)
         : false,
-      favorite: await isUserFavorite(uid, book._id),
+      favorite: uid ? await isUserFavorite(uid, book._id) : false,
       nbFavorites: await getFavoriteCount(book._id),
     }))
   );

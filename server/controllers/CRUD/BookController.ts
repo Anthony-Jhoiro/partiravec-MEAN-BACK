@@ -11,245 +11,208 @@
  *
  */
 
-import {Book} from "../../models/Book";
-import {User} from "../../models/User";
-import {imagesController} from './ImagesController';
-import {ENDPOINT} from '../../tools/environment';
-import {Response} from "express";
-import {requireAuth, requireInBody} from "../../tools/decorators";
-import {CustomRequest, ID} from "../../tools/types";
-import { SERVER_ERROR, RESOURCE_NOT_FOUND, UNAUTHORIZE, LOGIN_NEEDED } from "../../tools/ErrorTypes";
+import { Book } from "../../models/Book";
+import { User } from "../../models/User";
+import { imagesController } from "./ImagesController";
+import { ENDPOINT } from "../../tools/environment";
+import { Response } from "express";
+import { requireAuth, requireInBody } from "../../tools/decorators";
+import { CustomRequest, ID } from "../../tools/types";
+import {
+  SERVER_ERROR,
+  RESOURCE_NOT_FOUND,
+  UNAUTHORIZE,
+  LOGIN_NEEDED,
+  INVALID_PARAMETER,
+} from "../../tools/ErrorTypes";
 import favoriteController from "./FavoriteController";
+import {
+  createBook,
+  deleteBookById,
+  getBookById,
+  getBooks,
+  updateBook,
+} from "../../repositories/BookRepository";
 
 class BookController {
+  /**
+   * Create a book
+   * * 200 - book has been created
+   * * 500 - error creating the book
+   * @param req
+   * @param res
+   * @bodyParam title string
+   * @bodyParam coverImage string
+   */
+  @requireAuth()
+  @requireInBody("title", "coverImage")
+  async createBook(req: CustomRequest, res: Response) {
+    const body = req.body;
 
-    /**
-     * Create a book
-     * * 200 - book has been created
-     * * 500 - error creating the book
-     * @param req
-     * @param res
-     * @bodyParam title string
-     * @bodyParam coverImage string
-     */
-    @requireAuth()
-    @requireInBody('title', 'coverImage')
-    createBook(req: CustomRequest, res: Response) {
-        const body = req.body;
-
-        const book = new Book({
-            title: body.title,
-            coverImage: body.coverImage,
-            contributors: [req.currentUserId],
-            mainAuthor: req.currentUserId,
-            public: !!(body.public),
-            created: Date.now(),
-            updated: Date.now()
-        });
-        book.save((err, book) => {
-            if (err) return res.status(500).send(SERVER_ERROR);
-            // create a shield on imageCover
-            if (book.coverImage.includes(ENDPOINT))
-                imagesController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
-
-            return res.json(book);
-        });
+    try {
+      const book = createBook(
+        body.title,
+        body.coverImage,
+        req.currentUserId,
+        !!body.public
+      );
+      return res.json(book);
+    } catch (e) {
+      return res.status(500).send(SERVER_ERROR);
     }
+  }
 
-    /**
-     * Update a book
-     * * 200 - book has been updated
-     * * 404 - book not found
-     * * 401 - user has no access to modify the book
-     * @param req
-     * @param res
-     * @bodyParam title string
-     * @bodyParam coverImage string
-     * @pathParam id string(hex)
-     */
-    @requireAuth()
-    @requireInBody('title', 'coverImage')
-    updateBook(req: CustomRequest, res: Response) {
-        const body = req.body;
+  /**
+   * Update a book
+   * * 200 - book has been updated
+   * * 404 - book not found
+   * * 401 - user has no access to modify the book
+   * @param req
+   * @param res
+   * @bodyParam title string
+   * @bodyParam coverImage string
+   * @pathParam id string(hex)
+   */
+  @requireAuth()
+  @requireInBody("title", "coverImage")
+  async updateBook(req: CustomRequest, res: Response) {
+    const body = req.body;
+    const bookId = req.params.id;
 
-        const bookId = req.params.id;
-        Book.findOne({_id: bookId})
-            .then(optionalBook => {
-                // Check if the user can update the book
-                if (!optionalBook) return res.status(404).send(RESOURCE_NOT_FOUND)
-                if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
-                    return res.status(401).send(UNAUTHORIZE);
-                // Update infos
-                optionalBook.title = body.title;
-                optionalBook.coverImage = body.coverImage;
-                optionalBook.public = !!(body.public);
-                optionalBook.updated = Date.now();
-
-                // Save it
-                optionalBook.save((err, book) => {
-                    if (err) return res.status(500).send(SERVER_ERROR);
-
-                    // create a shield on imageCover
-                    if (book.coverImage.includes(ENDPOINT))
-                        imagesController.createImageShield(book.coverImage.split('/').pop(), 'book', book._id);
-
-                    return res.json(book);
-                });
-            });
+    try {
+      const book = await updateBook(
+        bookId,
+        req.currentUserId,
+        body.title,
+        body.coverImage,
+        !!body.public
+      );
+      return res.json(book);
+    } catch (err) {
+      if (err.message == RESOURCE_NOT_FOUND)
+        return res.status(404).send(RESOURCE_NOT_FOUND);
+      if (err.message == UNAUTHORIZE) return res.status(401).send(UNAUTHORIZE);
+      return res.status(500).send(SERVER_ERROR);
     }
+  }
 
-    /**
-     * Delete a book :
-     * * 200 - book deleted  
-     * * 404 - book not found  
-     * * 401 - user can not delete the book  
-     * @param req
-     * @param res
-     * @return {Promise<*>}
-     * @pathParam id string
-     */
-    @requireAuth()
-    async deleteBook(req: CustomRequest, res: Response) {
-        // Check if the book exists
-        const bookId = req.params.id;
-        const book = await Book.findOne({_id: bookId});
-        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND)
-
-        // Check if the user has the authorisation to delete the book
-        if (!book.isMainAuthor(req.currentUserId))
-            return res.status(401).send(UNAUTHORIZE);
-
-        Book.deleteOne({_id: bookId}, err => {
-            if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json(book);
-        });
+  /**
+   * Delete a book :
+   * * 200 - book deleted
+   * * 404 - book not found
+   * * 401 - user can not delete the book
+   * @param req
+   * @param res
+   * @return {Promise<*>}
+   * @pathParam id string
+   */
+  @requireAuth()
+  async deleteBook(req: CustomRequest, res: Response) {
+    // Check if the book exists
+    const bookId = req.params.id;
+    try {
+      const previousBook = deleteBookById(bookId, req.currentUserId);
+    } catch (e) {
+      switch (e.message) {
+        case RESOURCE_NOT_FOUND:
+          return res.status(404).send(RESOURCE_NOT_FOUND);
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
+  }
 
-    /**
-     * get Public Books :
-     * * 200 - fetch succeed
-     * @param req
-     * @param res
-     * @return {Promise<void>}
-     */
-    async getPublicBooks(req: CustomRequest, res: Response) {
-        let books = await Book
-            .find({
-                public: true
-            })
-            .sort({updated: -1})
-            .populate('mainAuthor', 'username');
+  /**
+   * get Public Books :
+   * * 200 - fetch succeed
+   * @param req
+   * @param res
+   * @return {Promise<void>}
+   */
+  async getPublicBooks(req: CustomRequest, res: Response) {
+    if (req.query.limit && typeof req.query.limit != "string")
+      return res.status(400).send(INVALID_PARAMETER);
 
-        const booksToSend = await Promise.all(books.map(async book => {
-            return {
-                public: book.public,
-                _id: book._id,
-                title: book.title,
-                coverImage: book.coverImage,
-                mainAuthor: book.mainAuthor,
-                created: book.created,
-                updated: book.updated,
-                access: (req.currentUserId) ? book.hasAccess(req.currentUserId) : false,
-                favorite: (req.currentUserId) ? await favoriteController.isMarkedAsFavorite(book._id, req.currentUserId) : false,
-                nbFavorites: await getFavoriteCount(book._id)
-            }
-        }));
+    if (req.query.offset && typeof req.query.offset != "string")
+      return res.status(400).send(INVALID_PARAMETER);
 
+    //@ts-ignore
+    const limit = parseInt(req.query.limit) || 10;
+    //@ts-ignore
+    const offset = parseInt(req.query.offset) || 0;
 
-        return res.json(booksToSend);
+    const books = await getBooks(limit, offset, req.currentUserId, {
+      //@ts-ignore
+      searchString: req.query.s,
+    });
+
+    return res.json(books);
+  }
+
+  /**
+   * Return the books where the user is a contributor
+   * * 200 - fetch succeed
+   * @param req
+   * @param res
+   * @return {Promise<*>}
+   */
+  @requireAuth()
+  async getBooksWhereUserIsAContributor(req: CustomRequest, res: Response) {
+    if (req.query.limit && typeof req.query.limit != "string")
+      return res.status(400).send(INVALID_PARAMETER);
+
+    if (req.query.offset && typeof req.query.offset != "string")
+      return res.status(400).send(INVALID_PARAMETER);
+
+    //@ts-ignore
+    const limit = parseInt(req.query.limit) || 10;
+    //@ts-ignore
+    const offset = parseInt(req.query.offset) || 0;
+
+    const books = await getBooks(limit, offset, req.currentUserId, {
+      //@ts-ignore
+      searchString: req.query.s,
+      userIsAContributor: true
+    });
+
+    return res.json(books);
+  }
+
+  /**
+   * Get a book by its id
+   * * 200 - fetch succeed
+   * * 404 - book not found
+   * * 403 - user need to be log to see the book
+   * * 401 - user is not authorize to see the book
+   * @param req
+   * @param res
+   * @return {Promise<*>}
+   * @pathParam id string
+   */
+  async getBookById(req: CustomRequest, res: Response) {
+
+    try {
+      const book = await getBookById(req.params.id, req.currentUserId, { pages: true, contributors: true })
+      return res.json(book);
+    } catch (e) {
+      switch (e.message) {
+        case RESOURCE_NOT_FOUND:
+          return res.status(404).send(RESOURCE_NOT_FOUND);
+        case LOGIN_NEEDED:
+          return res.status(403).send(LOGIN_NEEDED);
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
-
-    /**
-     * Return the books where the user is a contributor
-     * * 200 - fetch succeed
-     * @param req
-     * @param res
-     * @return {Promise<*>}
-     */
-    @requireAuth()
-    async getBooksWhereUserIsAContributor(req: CustomRequest, res: Response) {
-        let books = await Book
-            .find({contributors: req.currentUserId})
-            .sort({updated: -1})
-            .populate('mainAuthor', 'username');
-
-        const booksToSend = await Promise.all(books.map(async book => {
-            return {
-                public: book.public,
-                _id: book._id,
-                title: book.title,
-                coverImage: book.coverImage,
-                mainAuthor: book.mainAuthor,
-                created: book.created,
-                updated: book.updated,
-                access: true,
-                favorite: await favoriteController.isMarkedAsFavorite(book._id, req.currentUserId),
-                nbFavorites: await getFavoriteCount(book._id)
-            }
-        }));
-        return res.json(booksToSend);
-    }
-
-    /**
-     * Get a book by its id
-     * * 200 - fetch succeed
-     * * 404 - book not found
-     * * 403 - user need to be log to see the book
-     * * 401 - user is not authorize to see the book
-     * @param req
-     * @param res
-     * @return {Promise<*>}
-     * @pathParam id string
-     */
-    async getBookById(req: CustomRequest, res: Response) {
-
-        const optionalBook = await Book.findOne({_id: req.params.id});
-        if (!optionalBook) return res.status(404).send(RESOURCE_NOT_FOUND);
-        if (!optionalBook.public) {
-            if (!req.currentUserId) return res.status(403).send(LOGIN_NEEDED);
-            if (optionalBook.contributors.indexOf(req.currentUserId) === -1)
-                return res.status(401).send(UNAUTHORIZE);
-        }
-
-        let book: any = {
-            _id: optionalBook._id,
-            title: optionalBook.title,
-            coverImage: optionalBook.coverImage,
-            created: optionalBook.created,
-            updated: optionalBook.updated,
-            public: optionalBook.public,
-            access: (req.currentUserId) ? optionalBook.hasAccess(req.currentUserId) : false,
-            favorite: (req.currentUserId) ? await favoriteController.isMarkedAsFavorite(optionalBook._id, req.currentUserId) : false,
-            nbFavorites: await getFavoriteCount(optionalBook._id)
-        };
-
-        //Add the list of contributors
-        book.contributors = await User
-            .find({
-                $and: [
-                    {_id: {$in: optionalBook.contributors}},
-                    {_id: {$ne: req.currentUserId}}
-                ]
-            }, {password: 0, salt: 0, updated: 0});
-
-        // Add main author
-        book.mainAuthor = await User
-            .find({
-                $and: [
-                    {_id: optionalBook.mainAuthor}
-                ]
-            }, {password: 0, salt: 0, updated: 0});
-
-        return res.json(book);
-
-    }
-
-    
+  }
 }
 
-async function getFavoriteCount (bookId: ID)  {
-    return await User.countDocuments({favorites: bookId});
+async function getFavoriteCount(bookId: ID) {
+  return await User.countDocuments({ favorites: bookId });
 }
 
 export const bookController = new BookController();
-

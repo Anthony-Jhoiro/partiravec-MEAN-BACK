@@ -18,8 +18,6 @@ import {User} from '../server/models/User';
 import {makeUser} from './utils/makeUser';
 
 
-
-
 describe("Test the api path", () => {
     test("It should response to the GET method", () => {
         return request(app)
@@ -42,7 +40,6 @@ describe("Test register", () => {
             .send({username: "rdmName", password: "rdmPassword", email: "rdmEmail@mail.com"})
             .then(response => {
                 expect(response.statusCode).toBe(200);
-                expect(response.body.success).toBe("Votre compte a bien été créé !");
             });
         const user = await User.findOne({username: "rdmName",  email: "rdmEmail@mail.com"});
         expect(user.username).toBeTruthy();
