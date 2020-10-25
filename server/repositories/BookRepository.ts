@@ -8,6 +8,7 @@ import {
   SERVER_ERROR,
   UNAUTHORIZE,
 } from "../tools/ErrorTypes";
+import { getPages, PageInterface } from "./PageRepository";
 
 
 export interface BookInterface {
@@ -20,7 +21,7 @@ export interface BookInterface {
   favorite?: boolean;
   nbFavorite?: number;
   contributors?: Array<UserInterface>;
-  pages?: Array<any>; // TODO : Change type
+  pages?: Array<PageInterface>;
 }
 
 /**
@@ -28,8 +29,9 @@ export interface BookInterface {
  * @param {BookDocument} bookDocument BookDument instance to convert
  */
 export function bookDocumentToBookInterface(
-  bookDocument: BookDocument
+  bookDocument: BookDocument | string
 ): BookInterface {
+  if (typeof bookDocument == 'string') return;
   const bookInterface: BookInterface = {
     _id: bookDocument._id,
     title: bookDocument.title,
@@ -130,9 +132,6 @@ export async function getBookById(
     book.populate("contributors");
   }
 
-  if (options.pages) {
-    book.populate("pages"); // TODO : Implement
-  }
 
   const populatedBook = await book.execPopulate();
 
@@ -143,13 +142,16 @@ export async function getBookById(
     public: populatedBook.public,
     mainAuthor: userDocumentToUserInterface(populatedBook.mainAuthor),
     access: userHasAccess,
-    favorite: true, // TODO : implement
-    nbFavorite: 0, // TODO : implement
+    favorite: await isUserFavorite(currentUser, populatedBook._id),
+    nbFavorite: await getFavoriteCount(populatedBook._id)
   };
   if (options.contributors) {
     returnedBook.contributors = populatedBook.contributors.map((u) =>
       userDocumentToUserInterface(u)
     );
+  }
+  if (options.pages) {
+    returnedBook.pages = await getPages(bookId, currentUser);
   }
 
   return returnedBook;
