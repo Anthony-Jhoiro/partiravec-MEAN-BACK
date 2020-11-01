@@ -12,3 +12,4 @@ export const USELESS = "USELESS";
 export const NO_PRIVILEGE = "NO_PRIVILEGE";
 export const LOGIN_NEEDED = "LOGIN_NEEDED";
 export const INVALID_VALUE = "INVALID_VALUE";
+export const DEPRECATED = "DEPRECATED"

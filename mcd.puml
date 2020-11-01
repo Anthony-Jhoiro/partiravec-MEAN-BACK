@@ -57,8 +57,8 @@ package "Chat" {
 
 table(Image) {
     primary_key(id)
-    url
     foreign_key(protectedBy)
+    url
 }
 
 table(User) {

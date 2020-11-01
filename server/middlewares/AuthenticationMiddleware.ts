@@ -26,7 +26,7 @@ import {REQUEST_TOKEN_HEADER} from "../tools/constants";
  */
 export const AuthenticationMiddleware = (req, res, next) => {
   // Get the token
-  console.log(`[${req.method}] => ${req.url}`);
+  // console.log(`[${req.method}] => ${req.url}`);
 
   const token = req.headers[REQUEST_TOKEN_HEADER];
   if (!token) return next();

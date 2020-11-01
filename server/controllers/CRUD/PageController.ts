@@ -11,201 +11,205 @@
  *
  */
 
-import {Book} from "../../models/Book";
-import {Page} from "../../models/Page";
-import {ENDPOINT} from '../../tools/environment';
-import {imagesController} from './ImagesController';
-import {CustomRequest} from "../../tools/types";
-import {Response} from "express";
-import {requireAuth, requireInBody} from "../../tools/decorators";
-import { RESOURCE_NOT_FOUND, UNAUTHORIZE, SERVER_ERROR } from "../../tools/ErrorTypes";
+import { Book } from "../../models/Book";
+import { Page } from "../../models/Page";
+import { CustomRequest } from "../../tools/types";
+import { Response } from "express";
+import { requireAuth, requireInBody } from "../../tools/decorators";
+import {
+  RESOURCE_NOT_FOUND,
+  UNAUTHORIZE,
+  SERVER_ERROR,
+  DEPRECATED,
+} from "../../tools/ErrorTypes";
+import {
+  createPage,
+  deletePage,
+  getPageById,
+  getPages,
+  updatePage,
+} from "../../repositories/PageRepository";
 
 class PageController {
-    /**
-     * Create a new page
-     * @param req
-     * @param res
-     * @bodyParam title string
-     * @bodyParam content string
-     * @bodyParam images string[]
-     * @bodyParam location {lat, lng, label}
-     */
-    @requireInBody('title', 'content', 'images', 'location')
-    @requireAuth()
-    async addPage(req: CustomRequest, res: Response) {
-        const body = req.body;
-        const currentUser = req.currentUserId;
+  /**
+   * Create a new page
+   * @param req
+   * @param res
+   * @bodyParam title string
+   * @bodyParam content string
+   * @bodyParam images string[]
+   * @bodyParam location {lat, lng, label}
+   */
+  @requireInBody("title", "content", "images", "location")
+  @requireAuth()
+  async addPage(req: CustomRequest, res: Response) {
+    const body = req.body;
+    const currentUser = req.currentUserId;
 
-        // Get the book
-        const book = await Book.findOne({_id: req.params.book});
-
-        // Check if the book exists
-        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND);
-
-        // Check if the user has access to the book
-        if (!book.hasAccess(currentUser))
-            return res.status(401).send(UNAUTHORIZE);
-
-        // Create the page
-        const newPage = new Page({
-            mainAuthor: currentUser,
-            lastAuthor: currentUser,
-            title: body.title,
-            content: body.content,
-            location: body.location,
-            images: body.images,
-            book: book,
-            created: Date.now(),
-            updated: Date.now()
-        });
-
-        newPage.save((err, page) => {
-            if (err) return res.status(500).send(SERVER_ERROR);
-
-            // create shields on images
-            page.images.forEach(i => {
-                if (i.includes(ENDPOINT))
-                    imagesController.createImageShield(i.split('/').pop(), 'book', page.book);
-            })
-            return res.json(page);
-        });
+    try {
+      const page = await createPage(
+        currentUser,
+        req.params.book,
+        body.title,
+        body.content,
+        body.images,
+        body.location
+      );
+      return res.json(page);
+    } catch (e) {
+      switch (e.message) {
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        case RESOURCE_NOT_FOUND:
+          return res.status(404).send(RESOURCE_NOT_FOUND);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
+  }
 
-    /**
-     * Update a page
-     * @param req
-     * @param res
-     * @requestParam book string
-     * @requestParam page string
-     * @bodyParam title string
-     * @bodyParam content string
-     * @bodyParam images string[]
-     * @bodyParam location {lat, lng, label}
-     */
-    @requireAuth()
-    @requireInBody('title', 'content', 'images', 'location')
-    async updatePage(req: CustomRequest, res: Response) {
-        const body = req.body;
-        const currentUser = req.currentUserId;
+  /**
+   * Update a page
+   * @param req
+   * @param res
+   * @requestParam book string
+   * @requestParam page string
+   * @bodyParam title string
+   * @bodyParam content string
+   * @bodyParam images string[]
+   * @bodyParam location {lat, lng, label}
+   */
+  @requireAuth()
+  @requireInBody("title", "content", "images", "location")
+  async updatePage(req: CustomRequest, res: Response) {
+    const body = req.body;
+    const currentUser = req.currentUserId;
 
-        // the page exists and current user has access to it.
-        const page = await Page.findOne({book: req.params.book, _id: req.params.page}).populate('book');
-
-        if (!page)
-            return res.status(404).send(RESOURCE_NOT_FOUND);
-
-        // @ts-ignore
-        if (!page.book.hasAccess(currentUser))
-            return res.status(401).send(UNAUTHORIZE);
-
-        // Update infos and save the page
-        page.title = body.title;
-        page.content = body.content;
-        page.images = body.images;
-        page.location = body.location;
-        page.updated = Date.now();
-        page.lastAuthor = currentUser;
-
-        page.save((err, page) => {
-            if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json(page);
-        });
+    try {
+      const page = await updatePage(
+        req.params.book,
+        req.params.page,
+        currentUser,
+        body.title,
+        body.content,
+        body.images,
+        body.location
+      );
+      return res.json(page);
+    } catch (e) {
+      switch (e.message) {
+        case RESOURCE_NOT_FOUND:
+          return res.status(404).send(RESOURCE_NOT_FOUND);
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
+  }
 
-    /**
-     * Delete a page
-     * @param req
-     * @param res
-     * @requestParam book string
-     * @requestParam page string
-     */
-    @requireAuth()
-    async deletePage(req: CustomRequest, res: Response) {
-        const currentUser = req.currentUserId;
+  /**
+   * Delete a page
+   * @param req
+   * @param res
+   * @requestParam book string
+   * @requestParam page string
+   */
+  @requireAuth()
+  async deletePage(req: CustomRequest, res: Response) {
+    const currentUser = req.currentUserId;
 
-        // Get page
-        const page = await Page.findOne({book: req.params.book, _id: req.params.page}).populate('book');
-        if (!page) return res.status(404).send(RESOURCE_NOT_FOUND);
-
-        // Check authorisation
-        // @ts-ignore
-        if ((!page.isMainAuthor(currentUser)) && (!page.book.isMainAuthor(currentUser)))
-            return res.status(401).send(UNAUTHORIZE)
-
-        // delete the page
-        await Page.deleteOne({_id: req.params.page}, err => {
-            if (err) return res.status(500).send(SERVER_ERROR);
-            return res.json({success: "La page a bien été supprimée"});
-        });
+    try {
+      const page = await deletePage(
+        req.params.book,
+        req.params.page,
+        currentUser
+      );
+      return res.json(page);
+    } catch (e) {
+      switch (e.message) {
+        case RESOURCE_NOT_FOUND:
+          return res.status(404).send(RESOURCE_NOT_FOUND);
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
+  }
 
-    /**
-     * get pages
-     * @param req
-     * @param res
-     * @requestParam book
-     * @queryParam min boolean get minified results
-     */
-    async getPages(req: CustomRequest, res: Response) {
-        const currentUser = req.currentUserId;
-        // Check authorisation on the book
-        const book = await Book.findOne({_id: req.params.book});
-        if (!book) return res.status(404).send(RESOURCE_NOT_FOUND);
-        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).send(UNAUTHORIZE);
+  /**
+   * get pages
+   * @param req
+   * @param res
+   * @requestParam book
+   * @queryParam min boolean get minified results
+   */
+  async getPages(req: CustomRequest, res: Response) {
+    const currentUser = req.currentUserId;
 
-        if (req.query.min) {
-            const pages = await Page.find({book: book}, {_id: 1, title: 1, location: 1});
-            return res.json(pages);
-        } else {
-            const pages = await Page.find({book: book});
-            return res.json(pages);
-        }
-
+    try {
+      const pages = await getPages(req.params.book, currentUser);
+      return res.json(pages);
+    } catch (e) {
+      switch (e.message) {
+        case RESOURCE_NOT_FOUND:
+          return res.status(404).send(RESOURCE_NOT_FOUND);
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
+  }
 
-    /**
-     * get a page by its id
-     * @param req
-     * @param res
-     * @requestParam page string
-     * @requestParam book string
-     */
-    async getPageById(req: CustomRequest, res: Response) {
-        const currentUser = req.currentUserId;
-        // Check authorisation on the book
-        const page = await Page.findOne({_id: req.params.page, book: req.params.book}).populate('book');
-        if (!page) return res.status(404).send(RESOURCE_NOT_FOUND);
-        // @ts-ignore
-        if (!(page.book.hasAccess(currentUser)) && !page.book.public)
-            return res.status(401).send(UNAUTHORIZE);
+  /**
+   * get a page by its id
+   * @param req
+   * @param res
+   * @requestParam page string
+   * @requestParam book string
+   */
+  async getPageById(req: CustomRequest, res: Response) {
+    const currentUser = req.currentUserId;
+    // Check authorisation on the book
 
-        return res.json(page);
+    try {
+      const page = await getPageById(
+        req.params.book,
+        req.params.page,
+        currentUser
+      );
+      if (page) return res.json(page);
+      return res.status(404).send(RESOURCE_NOT_FOUND);
+
+    } catch (e) {
+      switch (e.message) {
+        case UNAUTHORIZE:
+          return res.status(401).send(UNAUTHORIZE);
+        default:
+          return res.status(500).send(SERVER_ERROR);
+      }
     }
+  }
 
-    async getCountriesWithLocations(req: CustomRequest, res: Response) {
-        const currentUser = req.currentUserId;
-        // Check authorisation on the book
-        const book = await Book.findOne({_id: req.params.book});
-        if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).send(UNAUTHORIZE);
+  /**
+   * @deprecated
+   * @param req 
+   * @param res 
+   */
+  async getCountriesWithLocations(req: CustomRequest, res: Response) {
+    return res.status(400).send(DEPRECATED);
+  }
 
-        const countries = await Page.find({book: book}).distinct("location.country");
-
-        return res.json(countries);
-    }
-
-    async getPagesFromCountry(req: CustomRequest, res: Response) {
-        const currentUser = req.currentUserId;
-        // Check authorisation on the book
-        const book = await Book.findOne({_id: req.params.book});
-        if (!book) return res.status(404).json({error: "Le livre n'existe pas."});
-        if (!(book.hasAccess(currentUser)) && !book.public) return res.status(401).send(UNAUTHORIZE);
-
-        const pages = await Page.find({book: req.params.book, 'location.country': req.params.country});
-
-        return res.json(pages);
-    }
+  /**
+   * @deprecated
+   * @param req 
+   * @param res 
+   */
+  async getPagesFromCountry(req: CustomRequest, res: Response) {
+    return res.status(400).send(DEPRECATED);
+  }
 }
 
 export const pageController = new PageController();
-

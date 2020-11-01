@@ -9,6 +9,7 @@ import { ID } from "../tools/types";
 import { bookDocumentToBookInterface, BookInterface } from "./BookRepository";
 import { userDocumentToUserInterface, UserInterface } from "./UserRepository";
 
+
 export interface PageInterface {
   _id: ID;
   mainAuthor: UserInterface;
@@ -22,6 +23,7 @@ export interface PageInterface {
   updated?: Date | number;
 }
 
+
 export interface Location {
   lat: number;
   lng: number;
@@ -29,23 +31,28 @@ export interface Location {
   country: string;
 }
 
+
 function pageDocumentToPageInterface(
   pageDocument: PageDocument | string
 ): PageInterface {
   if (typeof pageDocument == "string") return;
   return {
     _id: pageDocument._id,
-    mainAuthor: userDocumentToUserInterface(pageDocument.mainAuthor),
-    lastAuthor: userDocumentToUserInterface(pageDocument.lastAuthor),
+    // @ts-ignore
+    mainAuthor: pageDocument.mainAuthor,
+    // @ts-ignore
+    lastAuthor: pageDocument.lastAuthor,
     title: pageDocument.title,
     content: pageDocument.content,
     location: pageDocument.location,
     images: pageDocument.images,
-    book: bookDocumentToBookInterface(pageDocument.book),
+    // @ts-ignore
+    book: pageDocument.book,
     created: pageDocument.created,
     updated: pageDocument.updated,
   };
 }
+
 
 /**
  * Create a page if the user can
@@ -65,12 +72,13 @@ export async function createPage(
   location: Location
 ): Promise<PageInterface> {
   const book = await Book.findById(bookId);
+  if (!book) throw new Error(RESOURCE_NOT_FOUND);
 
   if (!book.hasAccess(currentUser)) throw new Error(UNAUTHORIZE);
 
   // Create the page
   try {
-    const newPage = await Page.create({
+    const newPage = new Page({
       mainAuthor: currentUser,
       lastAuthor: currentUser,
       title,
@@ -81,11 +89,14 @@ export async function createPage(
       created: Date.now(),
       updated: Date.now(),
     });
-    return pageDocumentToPageInterface(newPage);
-  } catch {
+    const savedPage = await newPage.save();
+    return pageDocumentToPageInterface(savedPage);
+  } catch (e) {
+    console.log(e);
     throw new Error(SERVER_ERROR);
   }
 }
+
 
 /**
  * Update a page
@@ -104,7 +115,7 @@ export async function updatePage(
   title: string,
   content: string,
   images: string[],
-  locations: Location
+  location: Location
 ): Promise<PageInterface> {
   const page = await Page.findOne({ book: bookId, _id: pageId }).populate(
     "book"
@@ -130,6 +141,7 @@ export async function updatePage(
     throw Error(SERVER_ERROR);
   }
 }
+
 
 /**
  * Delete a page
@@ -161,6 +173,7 @@ export async function deletePage(
     throw Error(SERVER_ERROR);
   }
 }
+
 
 /**
  * Get pages form a book
@@ -196,6 +209,6 @@ export async function getPageById(bookId: ID, pageId: ID, currentUser: ID) {
 
   if (!page.book.hasAccess(currentUser) && !page.book.public)
     throw Error(UNAUTHORIZE);
-  
-    return page;
+
+  return page;
 }
