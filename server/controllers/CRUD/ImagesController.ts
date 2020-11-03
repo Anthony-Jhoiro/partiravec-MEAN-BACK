@@ -15,10 +15,10 @@ import {Resize} from "../../tools/Resize";
 import { UPLOAD_FOLDER, ENDPOINT, IMAGE_STORAGE_MODE } from "../../tools/environment";
 import {readFile} from 'fs';
 import UploadMiddleware  from "../../middlewares/UploadMiddleware";
-import {Image} from "../../models/Image";
-import {Book} from "../../models/Book";
+import { createImageShield, getImageShield } from "../../repositories/ImageRepository";
 import {Request, Response} from "express";
 import { RESOURCE_NOT_FOUND, SERVER_ERROR, UNAUTHORIZE } from "../../tools/ErrorTypes";
+import { getBookById } from "../../repositories/BookRepository";
 
 const LOCALSTORAGE = "local";
 
@@ -61,13 +61,14 @@ class ImagesController {
 
     // check if image is protected
 
-    const imageShield = await Image.findOne({url: imageName});
+    const imageShield = await getImageShield(imageName);
     if (imageShield) {
       // The image is protected
       if (imageShield.role === 'book') {
         // The image is own by a book, get the book
-        const book = await Book.findOne({ _id: imageShield.book });
-        if (!book.canRead(currentUser)) {
+        try {
+          await getBookById(imageShield.book, req.currentUser);
+        } catch {
           return res.status(401).send(UNAUTHORIZE);
         }
       }
@@ -90,21 +91,15 @@ class ImagesController {
     }
   }
 
+  /**
+   * todo : delete
+   * @deprecated
+   * @param url 
+   * @param role 
+   * @param id 
+   */
   async createImageShield(url, role, id) {
-    // get previous shield if exits
-    const previousImageShield = await Image.findOne({url: url});
-    if (previousImageShield) return;
-
-
-    const imageShield = new Image({
-      url: url,
-      role: role
-    });
-    imageShield[role] = id;
-
-    imageShield.save(err => {
-      if (err) console.error("Impossible de créer le shield", err);
-    })
+    createImageShield(url, role, id)
   }
 }
 

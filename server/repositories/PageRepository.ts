@@ -1,3 +1,4 @@
+import { ENDPOINT } from "../tools/environment";
 import { Book } from "../models/Book";
 import { Page, PageDocument } from "../models/Page";
 import {
@@ -6,9 +7,9 @@ import {
   UNAUTHORIZE,
 } from "../tools/ErrorTypes";
 import { ID } from "../tools/types";
-import { bookDocumentToBookInterface, BookInterface } from "./BookRepository";
-import { userDocumentToUserInterface, UserInterface } from "./UserRepository";
-
+import { BookInterface } from "./BookRepository";
+import { createImageShield } from "./ImageRepository";
+import { UserInterface } from "./UserRepository";
 
 export interface PageInterface {
   _id: ID;
@@ -23,14 +24,12 @@ export interface PageInterface {
   updated?: Date | number;
 }
 
-
 export interface Location {
   lat: number;
   lng: number;
   label: string;
   country: string;
 }
-
 
 function pageDocumentToPageInterface(
   pageDocument: PageDocument | string
@@ -52,7 +51,6 @@ function pageDocumentToPageInterface(
     updated: pageDocument.updated,
   };
 }
-
 
 /**
  * Create a page if the user can
@@ -76,6 +74,15 @@ export async function createPage(
 
   if (!book.hasAccess(currentUser)) throw new Error(UNAUTHORIZE);
 
+  // manage images if the book is private
+  if (!book.public) {
+    images.forEach((i) => {
+      if (i.includes(ENDPOINT)) {
+        createImageShield(i.split("/").pop(), "book", book._id);
+      }
+    });
+  }
+
   // Create the page
   try {
     const newPage = new Page({
@@ -96,7 +103,6 @@ export async function createPage(
     throw new Error(SERVER_ERROR);
   }
 }
-
 
 /**
  * Update a page
@@ -142,7 +148,6 @@ export async function updatePage(
   }
 }
 
-
 /**
  * Delete a page
  * @param bookId book containing the page tho check the rights
@@ -174,7 +179,6 @@ export async function deletePage(
   }
 }
 
-
 /**
  * Get pages form a book
  * @param bookId book containing the pages
@@ -192,7 +196,6 @@ export async function getPages(bookId: ID, currentUser: ID) {
 
   return pagesFormated;
 }
-
 
 /**
  * Get a page from its id and its bookId

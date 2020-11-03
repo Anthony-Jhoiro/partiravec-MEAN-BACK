@@ -11,8 +11,6 @@
  *
  */
 
-import { Book } from "../../models/Book";
-import { Page } from "../../models/Page";
 import { CustomRequest } from "../../tools/types";
 import { Response } from "express";
 import { requireAuth, requireInBody } from "../../tools/decorators";
@@ -57,6 +55,7 @@ class PageController {
       );
       return res.json(page);
     } catch (e) {
+      console.log(e.message)
       switch (e.message) {
         case UNAUTHORIZE:
           return res.status(401).send(UNAUTHORIZE);

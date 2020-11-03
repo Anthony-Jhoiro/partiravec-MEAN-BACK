@@ -11,13 +11,9 @@
  *
  */
 
-import { Book } from "../../models/Book";
-import { User } from "../../models/User";
-import { imagesController } from "./ImagesController";
-import { ENDPOINT } from "../../tools/environment";
 import { Response } from "express";
 import { requireAuth, requireInBody } from "../../tools/decorators";
-import { CustomRequest, ID } from "../../tools/types";
+import { CustomRequest } from "../../tools/types";
 import {
   SERVER_ERROR,
   RESOURCE_NOT_FOUND,
@@ -25,7 +21,6 @@ import {
   LOGIN_NEEDED,
   INVALID_PARAMETER,
 } from "../../tools/ErrorTypes";
-import favoriteController from "./FavoriteController";
 import {
   createBook,
   deleteBookById,
@@ -209,10 +204,6 @@ class BookController {
       }
     }
   }
-}
-
-async function getFavoriteCount(bookId: ID) {
-  return await User.countDocuments({ favorites: bookId });
 }
 
 export const bookController = new BookController();

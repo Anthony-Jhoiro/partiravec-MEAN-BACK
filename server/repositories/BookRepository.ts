@@ -9,6 +9,7 @@ import {
   UNAUTHORIZE,
 } from "../tools/ErrorTypes";
 import { getPages, PageInterface } from "./PageRepository";
+import { createImageShield, deleteShieldFromUrl, getImageShieldsFormBook } from "./ImageRepository";
 
 
 export interface BookInterface {
@@ -92,12 +93,36 @@ export async function updateBook(
   if (!bookToUpdate) throw Error(RESOURCE_NOT_FOUND);
   if (!bookToUpdate.hasAccess(currentUser)) throw Error(UNAUTHORIZE);
 
+  // Handle image changes
+
+  if (bookToUpdate.public !== _public) {
+    const pages = await getPages(_id, currentUser);
+    if (_public) {      
+      pages.forEach(p => {
+        p.images.forEach(i => {
+          deleteShieldFromUrl(i);
+        });
+      });
+      deleteShieldFromUrl(bookToUpdate.coverImage);
+    } else {
+      pages.forEach(p => {
+        p.images.forEach(i => {
+          createImageShield(i, 'book', _id);
+        });
+      });
+    }
+  }
+
+  // handle cover image changes
+  if ((!_public) && coverImage !== bookToUpdate.coverImage) {
+    deleteShieldFromUrl(coverImage);
+    createImageShield(coverImage, 'book', _id);
+  }
+
   bookToUpdate.title = title;
   bookToUpdate.coverImage = coverImage;
   bookToUpdate.public = _public;
   bookToUpdate.updated = Date.now();
-
-  // TODO : Add control for images
 
   try {
     return bookDocumentToBookInterface(await bookToUpdate.save());
